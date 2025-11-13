@@ -46,3 +46,28 @@
 - [x] Test tRPC import mutation with parsed data
 - [x] Fix backend date validation causing "Invalid time value"
 - [x] Convert Excel serial dates to proper ISO format
+
+## Critical Import Issues
+- [ ] Debug why only 40/171 consumption entries imported
+- [ ] Fix missing products (Marlboro, XQS, Brobergs Arcadia) in consumption
+- [ ] Verify all products from purchases are created
+
+## Product Management
+- [ ] Add product editing functionality (type, stock, cost, flavor)
+- [ ] Add product deletion with confirmation
+- [ ] Update product details page with edit form
+
+## Import Improvements
+- [ ] Add duplicate detection for imports (check existing data before importing)
+- [ ] Show import preview/summary before confirming
+- [ ] Add option to clear all data before import
+
+## Inventory Fixes
+- [ ] Fix inventory calculations to subtract consumed quantities
+- [ ] Ensure manual purchases increase stock correctly
+- [ ] Display accurate current stock levels
+
+## Purchase Display Issue
+- [x] Fix purchases not showing on Purchases page
+- [x] Verify purchase data is being imported correctly
+- [x] Check if purchase query is working

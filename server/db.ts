@@ -109,7 +109,24 @@ export async function getUserPurchases(userId: number) {
   const db = await getDb();
   if (!db) return [];
   
-  return await db.select().from(purchases).where(eq(purchases.userId, userId)).orderBy(desc(purchases.purchaseDate));
+  const results = await db
+    .select({
+      id: purchases.id,
+      userId: purchases.userId,
+      productId: purchases.productId,
+      productName: products.name,
+      purchaseDate: purchases.purchaseDate,
+      quantity: purchases.quantity,
+      pricePerItem: purchases.pricePerItem,
+      totalCost: purchases.totalCost,
+      createdAt: purchases.createdAt,
+    })
+    .from(purchases)
+    .leftJoin(products, eq(purchases.productId, products.id))
+    .where(eq(purchases.userId, userId))
+    .orderBy(desc(purchases.purchaseDate));
+  
+  return results;
 }
 
 export async function createPurchase(purchase: InsertPurchase) {

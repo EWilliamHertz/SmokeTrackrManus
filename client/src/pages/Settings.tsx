@@ -145,15 +145,20 @@ export default function Settings() {
         
         // Convert Excel time decimal to HH:MM if needed
         if (typeof time === 'number') {
-          const hours = Math.floor(time * 24);
-          const minutes = Math.floor((time * 24 - hours) * 60);
+          // Handle time values > 1.0 (wrap around to 24-hour format)
+          const normalizedTime = time % 1;
+          const hours = Math.floor(normalizedTime * 24);
+          const minutes = Math.floor((normalizedTime * 24 - hours) * 60);
           time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
         
-        // Handle date parsing
+        // Build final datetime string
         let consumptionDate: string;
-        if (time && time !== "None" && time !== null) {
-          consumptionDate = `${date}T${time}:00`;
+        if (time && time !== "None" && time !== null && time !== undefined) {
+          // Ensure time has seconds
+          const timeStr = time.includes(':') ? time : `${time}:00`;
+          const finalTime = timeStr.split(':').length === 2 ? `${timeStr}:00` : timeStr;
+          consumptionDate = `${date}T${finalTime}`;
         } else {
           consumptionDate = `${date}T00:00:00`;
         }

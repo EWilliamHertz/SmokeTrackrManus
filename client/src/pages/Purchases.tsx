@@ -25,6 +25,10 @@ export default function Purchases() {
     enabled: !!user,
   });
 
+  const { data: purchases, isLoading: purchasesLoading } = trpc.purchases.list.useQuery(undefined, {
+    enabled: !!user,
+  });
+
   const utils = trpc.useUtils();
   const createProduct = trpc.products.create.useMutation();
   const createPurchase = trpc.purchases.create.useMutation({
@@ -134,15 +138,41 @@ export default function Purchases() {
         </Dialog>
       </header>
 
-      <main className="p-4 max-w-lg mx-auto">
+      <main className="p-4 max-w-lg mx-auto space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">Purchase History</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Add purchases using the + button above
-            </p>
+            {purchasesLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+            ) : !purchases || purchases.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No purchases yet. Add one using the + button above
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {purchases.map((purchase) => (
+                  <div key={purchase.id} className="flex justify-between items-start border-b border-border pb-3 last:border-0 last:pb-0">
+                    <div className="flex-1">
+                      <p className="font-medium">{purchase.productName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(purchase.purchaseDate).toLocaleDateString('sv-SE')}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{purchase.quantity} units</p>
+                      <p className="text-sm text-muted-foreground">
+                        {parseFloat(purchase.pricePerItem).toFixed(2)} SEK each
+                      </p>
+                      <p className="text-sm font-medium">
+                        {(purchase.quantity * parseFloat(purchase.pricePerItem)).toFixed(2)} SEK
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
