@@ -10,12 +10,23 @@ type Tab = "dashboard" | "history" | "inventory" | "purchases";
 export default function ShareView() {
   const [, params] = useRoute("/share/:token");
   const token = params?.token || "";
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   const { data: shareData, isLoading, error } = trpc.share.getPublicData.useQuery(
     { token },
     { enabled: !!token }
   );
+
+  // Determine first visible tab
+  const visibleTabs = shareData?.preferences || { dashboard: true, history: true, inventory: true, purchases: true };
+  const firstVisibleTab = (
+    visibleTabs.dashboard ? "dashboard" :
+    visibleTabs.history ? "history" :
+    visibleTabs.inventory ? "inventory" :
+    visibleTabs.purchases ? "purchases" :
+    "dashboard"
+  ) as Tab;
+
+  const [activeTab, setActiveTab] = useState<Tab>(firstVisibleTab);
 
   if (isLoading) {
     return (
@@ -37,7 +48,9 @@ export default function ShareView() {
   }
 
   const { stats, preferences, products, consumption, purchases } = shareData;
-  const visibleTabs = preferences || { dashboard: true, history: true, inventory: true, purchases: true };
+  
+  // Ensure active tab is visible (use effect to avoid setState in render)
+  const validActiveTab = visibleTabs[activeTab] ? activeTab : firstVisibleTab;
   
   // Calculate budget percentage
   const budgetPercentage = (stats.monthlySpent / stats.monthlyBudget) * 100;
@@ -123,7 +136,7 @@ export default function ShareView() {
         <div className="flex overflow-x-auto max-w-2xl mx-auto">
           {visibleTabs.dashboard && (
             <Button
-              variant={activeTab === "dashboard" ? "default" : "ghost"}
+              variant={validActiveTab === "dashboard" ? "default" : "ghost"}
               className="flex-1 rounded-none"
               onClick={() => setActiveTab("dashboard")}
             >
@@ -133,7 +146,7 @@ export default function ShareView() {
           )}
           {visibleTabs.history && (
             <Button
-              variant={activeTab === "history" ? "default" : "ghost"}
+              variant={validActiveTab === "history" ? "default" : "ghost"}
               className="flex-1 rounded-none"
               onClick={() => setActiveTab("history")}
             >
@@ -143,7 +156,7 @@ export default function ShareView() {
           )}
           {visibleTabs.inventory && (
             <Button
-              variant={activeTab === "inventory" ? "default" : "ghost"}
+              variant={validActiveTab === "inventory" ? "default" : "ghost"}
               className="flex-1 rounded-none"
               onClick={() => setActiveTab("inventory")}
             >
@@ -153,7 +166,7 @@ export default function ShareView() {
           )}
           {visibleTabs.purchases && (
             <Button
-              variant={activeTab === "purchases" ? "default" : "ghost"}
+              variant={validActiveTab === "purchases" ? "default" : "ghost"}
               className="flex-1 rounded-none"
               onClick={() => setActiveTab("purchases")}
             >
@@ -166,7 +179,7 @@ export default function ShareView() {
 
       <main className="p-4 space-y-4 max-w-2xl mx-auto pb-8">
         {/* Dashboard Tab */}
-        {activeTab === "dashboard" && visibleTabs.dashboard && (
+        {validActiveTab === "dashboard" && visibleTabs.dashboard && (
           <>
             <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20">
               <CardHeader>
@@ -254,7 +267,7 @@ export default function ShareView() {
         )}
 
         {/* History Tab */}
-        {activeTab === "history" && visibleTabs.history && (
+        {validActiveTab === "history" && visibleTabs.history && (
           <>
             <div className="grid grid-cols-2 gap-4">
               <Card>
@@ -328,7 +341,7 @@ export default function ShareView() {
         )}
 
         {/* Inventory Tab */}
-        {activeTab === "inventory" && visibleTabs.inventory && (
+        {validActiveTab === "inventory" && visibleTabs.inventory && (
           <Card>
             <CardHeader>
               <CardTitle>Product Inventory</CardTitle>
@@ -359,7 +372,7 @@ export default function ShareView() {
         )}
 
         {/* Purchases Tab */}
-        {activeTab === "purchases" && visibleTabs.purchases && (
+        {validActiveTab === "purchases" && visibleTabs.purchases && (
           <Card>
             <CardHeader>
               <CardTitle>Purchase History</CardTitle>

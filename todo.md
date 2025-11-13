@@ -101,3 +101,6 @@
 - [x] Create full public share view with tabs (Dashboard, History, Inventory, Purchases)
 - [x] Filter visible tabs based on user's share preferences
 - [x] Show all tabs by default to showcase the full app
+
+## Bug Fixes
+- [x] Fix JavaScript error in public share link (ShareView component)
