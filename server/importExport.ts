@@ -35,18 +35,26 @@ export const importExportRouter = router({
         productMap.set(existing.name, existing.id);
       }
       
-      // Create only new products
-      for (const product of input.products) {
-        if (!productMap.has(product.name)) {
+      // Collect all unique product names from all sources
+      const allProductNames = new Set<string>();
+      input.products.forEach(p => allProductNames.add(p.name));
+      input.purchases.forEach(p => allProductNames.add(p.productName));
+      input.consumption.forEach(c => allProductNames.add(c.productName));
+      
+      // Create products that don't exist yet
+      for (const productName of Array.from(allProductNames)) {
+        if (!productMap.has(productName)) {
+          // Find product details from input.products or use defaults
+          const productDetails = input.products.find(p => p.name === productName);
           try {
             await db.createProduct({
               userId,
-              name: product.name,
-              type: product.type,
-              flavorDetail: product.flavorDetail,
+              name: productName,
+              type: productDetails?.type || "Other",
+              flavorDetail: productDetails?.flavorDetail,
             });
           } catch (error) {
-            console.error(`Failed to create product ${product.name}:`, error);
+            console.error(`Failed to create product ${productName}:`, error);
           }
         }
       }

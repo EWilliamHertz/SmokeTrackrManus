@@ -28,3 +28,6 @@
 - [x] Dominant product tracking
 - [x] Cost breakdown per product
 - [x] Total spending analysis
+
+## Import Improvements
+- [x] Auto-create products from purchase/consumption data if missing from inventory
