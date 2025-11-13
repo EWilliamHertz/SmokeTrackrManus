@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, sql, sum } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, products, purchases, consumption, userSettings, InsertProduct, InsertPurchase, InsertConsumption, InsertUserSettings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -89,4 +88,146 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Product queries
+export async function getUserProducts(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(products).where(eq(products.userId, userId)).orderBy(products.name);
+}
+
+export async function createProduct(product: InsertProduct) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(products).values(product);
+  return result;
+}
+
+// Purchase queries
+export async function getUserPurchases(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(purchases).where(eq(purchases.userId, userId)).orderBy(desc(purchases.purchaseDate));
+}
+
+export async function createPurchase(purchase: InsertPurchase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(purchases).values(purchase);
+}
+
+export async function getMonthlySpending(userId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 1);
+  
+  const result = await db
+    .select({ total: sum(purchases.totalCost) })
+    .from(purchases)
+    .where(
+      and(
+        eq(purchases.userId, userId),
+        gte(purchases.purchaseDate, startDate),
+        sql`${purchases.purchaseDate} < ${endDate}`
+      )
+    );
+  
+  return Number(result[0]?.total || 0);
+}
+
+// Consumption queries
+export async function getUserConsumption(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(consumption).where(eq(consumption.userId, userId)).orderBy(desc(consumption.consumptionDate));
+}
+
+export async function createConsumption(cons: InsertConsumption) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(consumption).values(cons);
+}
+
+export async function getTotalConsumption(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ total: sum(consumption.quantity) })
+    .from(consumption)
+    .where(eq(consumption.userId, userId));
+  
+  return Number(result[0]?.total || 0);
+}
+
+export async function getConsumptionByType(userId: number, type: string) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ total: sum(consumption.quantity) })
+    .from(consumption)
+    .innerJoin(products, eq(consumption.productId, products.id))
+    .where(and(eq(consumption.userId, userId), sql`${products.type} = ${type}`));
+  
+  return Number(result[0]?.total || 0);
+}
+
+// User settings queries
+export async function getUserSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+  return result[0] || null;
+}
+
+export async function upsertUserSettings(settings: InsertUserSettings) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(userSettings).values(settings).onDuplicateKeyUpdate({
+    set: {
+      monthlyBudget: settings.monthlyBudget,
+      currency: settings.currency,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// Inventory calculations
+export async function getProductInventory(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get total purchased
+  const purchaseResult = await db
+    .select({ total: sum(purchases.quantity), avgCost: sql<string>`SUM(${purchases.totalCost}) / SUM(${purchases.quantity})` })
+    .from(purchases)
+    .where(and(eq(purchases.userId, userId), eq(purchases.productId, productId)));
+  
+  const totalPurchased = Number(purchaseResult[0]?.total || 0);
+  const avgCost = Number(purchaseResult[0]?.avgCost || 0);
+  
+  // Get total consumed
+  const consumptionResult = await db
+    .select({ total: sum(consumption.quantity) })
+    .from(consumption)
+    .where(and(eq(consumption.userId, userId), eq(consumption.productId, productId)));
+  
+  const totalConsumed = Number(consumptionResult[0]?.total || 0);
+  
+  return {
+    totalPurchased,
+    totalConsumed,
+    currentStock: totalPurchased - totalConsumed,
+    avgCost,
+  };
+}
