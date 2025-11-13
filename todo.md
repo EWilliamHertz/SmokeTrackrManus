@@ -85,3 +85,12 @@
 - [ ] Improve purchase form to ask for total price + quantity, then auto-calculate price per unit
 - [ ] Fix inventory showing "-" stock for products without purchases
 - [x] Support both "Consumption" and "Smoke Log" sheet names in import
+
+## New Feature Requests
+- [ ] Add start date tracking (account creation, updated to first consumption on import)
+- [ ] Add date range filtering to dashboard (Today/Week/Month/All Time presets)
+- [x] Support decimal quantities (0.3, 0.5) for partial consumption
+- [ ] Add dashboard edit mode with drag-and-drop section reordering
+- [ ] Add consumption entry editing (edit quantity, product, date)
+- [ ] Add consumption entry deletion
+- [ ] Create shareable public read-only view with link generation

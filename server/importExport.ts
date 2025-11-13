@@ -104,7 +104,7 @@ export const importExportRouter = router({
             userId,
             productId,
             consumptionDate: new Date(cons.consumptionDate),
-            quantity: cons.quantity,
+            quantity: cons.quantity.toString(),
           });
           imported++;
         } catch (error) {

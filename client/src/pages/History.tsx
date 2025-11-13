@@ -78,28 +78,29 @@ export default function History() {
     for (const c of filteredConsumption) {
       const product = productMap.get(c.productId);
       const price = priceMap.get(c.productId) || 0;
-      const cost = c.quantity * price;
+      const qty = parseFloat(c.quantity);
+      const cost = qty * price;
 
-      totalItems += c.quantity;
+      totalItems += qty;
       totalCost += cost;
 
       // By product
       const existing = productStats.get(c.productId);
       if (existing) {
-        existing.quantity += c.quantity;
+        existing.quantity += qty;
         existing.cost += cost;
       } else if (product) {
         productStats.set(c.productId, {
           name: product.name,
           type: product.type,
-          quantity: c.quantity,
+          quantity: qty,
           cost,
         });
       }
 
       // By type
       if (product) {
-        typeStats.set(product.type, (typeStats.get(product.type) || 0) + c.quantity);
+        typeStats.set(product.type, (typeStats.get(product.type) || 0) + qty);
       }
     }
 

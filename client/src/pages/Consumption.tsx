@@ -44,7 +44,7 @@ export default function Consumption() {
 
     createConsumption.mutate({
       productId: parseInt(productId),
-      quantity: parseInt(quantity),
+      quantity: parseFloat(quantity),
       consumptionDate: new Date(date),
     });
   };
@@ -88,7 +88,8 @@ export default function Consumption() {
                 <Input
                   id="quantity"
                   type="number"
-                  min="1"
+                  min="0.1"
+                  step="0.1"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                 />

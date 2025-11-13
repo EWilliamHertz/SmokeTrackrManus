@@ -127,7 +127,7 @@ export const appRouter = router({
       .input(z.object({
         productId: z.number(),
         purchaseDate: z.date(),
-        quantity: z.number().int().positive(),
+        quantity: z.number().positive(), // Support decimals like 0.5
         pricePerItem: z.number().positive(),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -154,12 +154,14 @@ export const appRouter = router({
       .input(z.object({
         productId: z.number(),
         consumptionDate: z.date(),
-        quantity: z.number().int().positive(),
+        quantity: z.number().positive(), // Support decimals like 0.5
       }))
       .mutation(async ({ ctx, input }) => {
         await db.createConsumption({
           userId: ctx.user.id,
-          ...input,
+          productId: input.productId,
+          consumptionDate: input.consumptionDate,
+          quantity: input.quantity.toString(),
         });
         return { success: true };
       }),

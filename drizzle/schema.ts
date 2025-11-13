@@ -58,7 +58,7 @@ export const consumption = mysqlTable("consumption", {
   userId: int("userId").notNull(),
   productId: int("productId").notNull(),
   consumptionDate: timestamp("consumptionDate").notNull(),
-  quantity: int("quantity").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(), // Support decimal quantities like 0.5
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -73,6 +73,9 @@ export const userSettings = mysqlTable("userSettings", {
   userId: int("userId").notNull().unique(),
   monthlyBudget: decimal("monthlyBudget", { precision: 10, scale: 2 }).notNull().default("500.00"),
   currency: varchar("currency", { length: 10 }).notNull().default("SEK"),
+  startDate: timestamp("startDate"),
+  dashboardLayout: text("dashboardLayout"), // JSON string for dashboard section order
+  shareToken: varchar("shareToken", { length: 64 }).unique(), // For public read-only sharing
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
