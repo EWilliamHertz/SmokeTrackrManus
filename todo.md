@@ -31,3 +31,7 @@
 
 ## Import Improvements
 - [x] Auto-create products from purchase/consumption data if missing from inventory
+
+## Import Bug Fixes
+- [x] Fix date/time parsing to handle Excel date formats
+- [x] Add error handling for invalid date values

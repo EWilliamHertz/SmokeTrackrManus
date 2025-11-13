@@ -134,13 +134,22 @@ export default function Settings() {
 
       const consumption = consumptionData.map((row: any) => {
         const date = row.Date || row.date;
-        const time = row.Time || row.time || "00:00";
+        const time = row.Time || row.time;
+        
+        // Handle date parsing
+        let consumptionDate: string;
+        if (time && time !== "None" && time !== null) {
+          consumptionDate = `${date}T${time}`;
+        } else {
+          consumptionDate = `${date}T00:00:00`;
+        }
+        
         return {
           productName: row.Product || row.product,
-          consumptionDate: `${date}T${time}`,
+          consumptionDate,
           quantity: parseInt(row.Quantity || row.quantity || "0"),
         };
-      }).filter((c: any) => c.productName);
+      }).filter((c: any) => c.productName && c.consumptionDate);
 
       const budgetRow = dashboardData.find((row: any) => 
         (row.Label || row.label || "").toLowerCase().includes("budget")
