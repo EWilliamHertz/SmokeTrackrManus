@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
+import { importExportRouter } from "./importExport";
 
 export const appRouter = router({
   system: systemRouter,
@@ -133,6 +134,9 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // Import/Export
+  importExport: importExportRouter,
 
   // Settings
   settings: router({

@@ -11,3 +11,9 @@
 - [x] PWA manifest and meta tags
 - [x] Mobile-optimized UI with dark theme
 - [x] Data persistence and calculations
+
+## New Features
+- [x] Import Excel data functionality
+- [x] Export data to Excel functionality
+- [x] Parse Excel file structure (Consumption, Inventory, Purchase Log, Dashboard)
+- [x] Backend procedures for bulk data import
