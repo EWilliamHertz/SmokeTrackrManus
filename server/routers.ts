@@ -85,6 +85,36 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return await db.getProductInventory(ctx.user.id, input.productId);
       }),
+    
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const products = await db.getUserProducts(ctx.user.id);
+        return products.find(p => p.id === input.id);
+      }),
+    
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string(),
+        type: z.enum(["Cigar", "Cigarillo", "Cigarette", "Snus", "Other"]),
+        flavorDetail: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateProduct(input.id, ctx.user.id, {
+          name: input.name,
+          type: input.type,
+          flavorDetail: input.flavorDetail,
+        });
+        return { success: true };
+      }),
+    
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteProduct(input.id, ctx.user.id);
+        return { success: true };
+      }),
   }),
 
   // Purchases

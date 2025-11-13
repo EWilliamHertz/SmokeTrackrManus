@@ -248,3 +248,24 @@ export async function getProductInventory(userId: number, productId: number) {
     avgCost,
   };
 }
+
+export async function updateProduct(productId: number, userId: number, updates: Partial<InsertProduct>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.update(products)
+    .set(updates)
+    .where(and(eq(products.id, productId), eq(products.userId, userId)));
+}
+
+export async function deleteProduct(productId: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Delete associated consumption and purchases first
+  await db.delete(consumption).where(and(eq(consumption.productId, productId), eq(consumption.userId, userId)));
+  await db.delete(purchases).where(and(eq(purchases.productId, productId), eq(purchases.userId, userId)));
+  
+  // Then delete the product
+  return await db.delete(products).where(and(eq(products.id, productId), eq(products.userId, userId)));
+}

@@ -71,3 +71,17 @@
 - [x] Fix purchases not showing on Purchases page
 - [x] Verify purchase data is being imported correctly
 - [x] Check if purchase query is working
+
+## Critical Backend Import Issue
+- [ ] Debug why backend only accepts 41/171 consumption entries
+- [ ] Check server logs for import errors
+- [ ] Test backend import mutation with all 171 entries
+- [ ] Fix backend validation rejecting valid entries
+
+## User-Reported Issues
+- [x] Add product edit functionality (change type, stock, cost, etc.)
+- [x] Add product delete functionality
+- [x] Fix missing purchases for Brobergs Arcadia, Nicaragua Short Puritos, Reserve 10th Anniversary Puritos (these products have no purchases in Excel)
+- [ ] Improve purchase form to ask for total price + quantity, then auto-calculate price per unit
+- [ ] Fix inventory showing "-" stock for products without purchases
+- [x] Support both "Consumption" and "Smoke Log" sheet names in import

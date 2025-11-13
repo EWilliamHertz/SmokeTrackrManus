@@ -42,10 +42,14 @@ export const importExportRouter = router({
       input.consumption.forEach(c => allProductNames.add(c.productName));
       
       // Create products that don't exist yet
+      console.log(`[Import] Found ${allProductNames.size} unique products across all sheets`);
+      console.log(`[Import] Existing products: ${productMap.size}`);
+      
       for (const productName of Array.from(allProductNames)) {
         if (!productMap.has(productName)) {
           // Find product details from input.products or use defaults
           const productDetails = input.products.find(p => p.name === productName);
+          console.log(`[Import] Creating missing product: ${productName} (type: ${productDetails?.type || "Other"})`);
           try {
             await db.createProduct({
               userId,
@@ -54,7 +58,7 @@ export const importExportRouter = router({
               flavorDetail: productDetails?.flavorDetail,
             });
           } catch (error) {
-            console.error(`Failed to create product ${productName}:`, error);
+            console.error(`[Import] Failed to create product ${productName}:`, error);
           }
         }
       }
@@ -83,17 +87,33 @@ export const importExportRouter = router({
       }
       
       // Import consumption
+      console.log(`[Import] Importing ${input.consumption.length} consumption entries`);
+      let skipped = 0;
+      let imported = 0;
+      
       for (const cons of input.consumption) {
         const productId = productMap.get(cons.productName);
-        if (!productId) continue;
+        if (!productId) {
+          console.log(`[Import] Skipping consumption for unknown product: ${cons.productName}`);
+          skipped++;
+          continue;
+        }
         
-        await db.createConsumption({
-          userId,
-          productId,
-          consumptionDate: new Date(cons.consumptionDate),
-          quantity: cons.quantity,
-        });
+        try {
+          await db.createConsumption({
+            userId,
+            productId,
+            consumptionDate: new Date(cons.consumptionDate),
+            quantity: cons.quantity,
+          });
+          imported++;
+        } catch (error) {
+          console.error(`[Import] Failed to create consumption for ${cons.productName}:`, error);
+          skipped++;
+        }
       }
+      
+      console.log(`[Import] Consumption import complete: ${imported} imported, ${skipped} skipped`);
       
       // Update settings if provided
       if (input.monthlyBudget) {
@@ -104,7 +124,7 @@ export const importExportRouter = router({
         });
       }
       
-      return { success: true };
+      return { success: true, imported, skipped };
     }),
 
   // Export all user data

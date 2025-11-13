@@ -107,7 +107,12 @@ export default function Settings() {
       const data = await file.arrayBuffer();
       const wb = XLSX.read(data);
 
-      const consumptionSheet = wb.Sheets["Consumption"];
+      // Handle both "Consumption" and "Smoke Log" sheet names
+      const consumptionSheet = wb.Sheets["Consumption"] || wb.Sheets["Smoke Log"];
+      if (!consumptionSheet) {
+        toast.error("Could not find Consumption or Smoke Log sheet");
+        return;
+      }
       const consumptionData = XLSX.utils.sheet_to_json<any>(consumptionSheet);
       
       const inventorySheet = wb.Sheets["Inventory"];
