@@ -120,16 +120,16 @@ export default function Settings() {
       const dashboardData = XLSX.utils.sheet_to_json<any>(dashboardSheet);
 
       const products = inventoryData.map((row: any) => ({
-        name: row.Product || row.product || row.Name || row.name,
+        name: row["Product Name"] || row.Product || row.product || row.Name || row.name,
         type: (row.Type || row.type || "Other") as "Cigar" | "Cigarillo" | "Cigarette" | "Snus" | "Other",
-        flavorDetail: row.Flavor || row.flavor || row["Flavor Detail"] || undefined,
+        flavorDetail: row["Flavor/Detail"] || row.Flavor || row.flavor || row["Flavor Detail"] || undefined,
       })).filter((p: any) => p.name);
 
       const purchases = purchaseData.map((row: any) => ({
-        productName: row.Product || row.product,
-        purchaseDate: row.Date || row.date,
+        productName: row["Product Name"] || row.Product || row.product,
+        purchaseDate: row["Purchase Date"] || row.Date || row.date,
         quantity: parseInt(row.Quantity || row.quantity || "0"),
-        pricePerItem: parseFloat(row["Price Per Item"] || row.pricePerItem || row["Price per unit"] || "0"),
+        pricePerItem: parseFloat(row["Price Per Item (SEK)"] || row["Price Per Item"] || row.pricePerItem || row["Price per unit"] || "0"),
       })).filter((p: any) => p.productName);
 
       const consumption = consumptionData.map((row: any) => {
@@ -152,9 +152,9 @@ export default function Settings() {
       }).filter((c: any) => c.productName && c.consumptionDate);
 
       const budgetRow = dashboardData.find((row: any) => 
-        (row.Label || row.label || "").toLowerCase().includes("budget")
+        (row["Smoke Tracker Dashboard"] || row.Label || row.label || "").toLowerCase().includes("budget")
       );
-      const monthlyBudget = budgetRow ? parseFloat(budgetRow.Value || budgetRow.value || "500") : undefined;
+      const monthlyBudget = budgetRow ? parseFloat(budgetRow.__EMPTY || budgetRow.Value || budgetRow.value || "500") : undefined;
 
       await importData.mutateAsync({
         products,
