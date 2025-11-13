@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Download, Upload, Share2, Copy, RefreshCw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -19,6 +20,12 @@ export default function Settings() {
   const [monthlyBudget, setMonthlyBudget] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shareUrl, setShareUrl] = useState("");
+  const [sharePrefs, setSharePrefs] = useState({
+    dashboard: true,
+    history: true,
+    inventory: true,
+    purchases: true,
+  });
 
   const utils = trpc.useUtils();
   const updateSettings = trpc.settings.update.useMutation({
@@ -54,6 +61,13 @@ export default function Settings() {
     },
     onError: (error) => {
       toast.error("Failed to generate link: " + error.message);
+    },
+  });
+
+  const updateSharePreferences = trpc.settings.updateSharePreferences.useMutation({
+    onSuccess: () => {
+      utils.settings.get.invalidate();
+      toast.success("Share preferences updated!");
     },
   });
 
@@ -289,6 +303,77 @@ export default function Settings() {
             <p className="text-sm text-muted-foreground">
               Generate a public read-only link to share your consumption stats with others.
             </p>
+            
+            <div className="space-y-2 border border-border rounded-lg p-3">
+              <p className="text-sm font-medium">Choose what to share:</p>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="share-dashboard"
+                    checked={sharePrefs.dashboard}
+                    onCheckedChange={(checked) => {
+                      const newPrefs = { ...sharePrefs, dashboard: !!checked };
+                      setSharePrefs(newPrefs);
+                      if (settings?.shareToken) {
+                        updateSharePreferences.mutate(newPrefs);
+                      }
+                    }}
+                  />
+                  <label htmlFor="share-dashboard" className="text-sm cursor-pointer">
+                    Dashboard (stats & budget)
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="share-history"
+                    checked={sharePrefs.history}
+                    onCheckedChange={(checked) => {
+                      const newPrefs = { ...sharePrefs, history: !!checked };
+                      setSharePrefs(newPrefs);
+                      if (settings?.shareToken) {
+                        updateSharePreferences.mutate(newPrefs);
+                      }
+                    }}
+                  />
+                  <label htmlFor="share-history" className="text-sm cursor-pointer">
+                    Consumption History
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="share-inventory"
+                    checked={sharePrefs.inventory}
+                    onCheckedChange={(checked) => {
+                      const newPrefs = { ...sharePrefs, inventory: !!checked };
+                      setSharePrefs(newPrefs);
+                      if (settings?.shareToken) {
+                        updateSharePreferences.mutate(newPrefs);
+                      }
+                    }}
+                  />
+                  <label htmlFor="share-inventory" className="text-sm cursor-pointer">
+                    Product Inventory
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="share-purchases"
+                    checked={sharePrefs.purchases}
+                    onCheckedChange={(checked) => {
+                      const newPrefs = { ...sharePrefs, purchases: !!checked };
+                      setSharePrefs(newPrefs);
+                      if (settings?.shareToken) {
+                        updateSharePreferences.mutate(newPrefs);
+                      }
+                    }}
+                  />
+                  <label htmlFor="share-purchases" className="text-sm cursor-pointer">
+                    Purchase History
+                  </label>
+                </div>
+              </div>
+            </div>
+            
             {settings?.shareToken || shareUrl ? (
               <div className="space-y-2">
                 <div className="flex gap-2">

@@ -1,0 +1,1 @@
+ALTER TABLE `userSettings` ADD `sharePreferences` text;

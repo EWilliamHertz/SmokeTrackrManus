@@ -94,3 +94,10 @@
 - [x] Add consumption entry editing (edit quantity, product, date)
 - [x] Add consumption entry deletion
 - [x] Create shareable public read-only view with link generation
+
+## Share Feature Enhancement
+- [x] Update userSettings schema to store sharePreferences (which tabs to show)
+- [x] Add checkboxes in Settings to select visible tabs for share link
+- [x] Create full public share view with tabs (Dashboard, History, Inventory, Purchases)
+- [x] Filter visible tabs based on user's share preferences
+- [x] Show all tabs by default to showcase the full app

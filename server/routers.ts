@@ -210,7 +210,7 @@ export const appRouter = router({
 
   // Public share view
   share: router({
-    getPublicStats: publicProcedure
+    getPublicData: publicProcedure
       .input(z.object({ token: z.string() }))
       .query(async ({ input }) => {
         const settings = await db.getUserSettingsByShareToken(input.token);
@@ -223,6 +223,11 @@ export const appRouter = router({
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
         
+        // Parse share preferences (default to all visible)
+        const preferences = settings.sharePreferences 
+          ? JSON.parse(settings.sharePreferences)
+          : { dashboard: true, history: true, inventory: true, purchases: true };
+        
         const [
           monthlySpent,
           totalConsumed,
@@ -230,6 +235,9 @@ export const appRouter = router({
           totalCigarillos,
           totalCigarettes,
           totalSnus,
+          products,
+          consumption,
+          purchases,
         ] = await Promise.all([
           db.getMonthlySpending(userId, currentYear, currentMonth),
           db.getTotalConsumption(userId),
@@ -237,19 +245,28 @@ export const appRouter = router({
           db.getConsumptionByType(userId, "Cigarillo"),
           db.getConsumptionByType(userId, "Cigarette"),
           db.getConsumptionByType(userId, "Snus"),
+          db.getUserProducts(userId),
+          db.getUserConsumption(userId),
+          db.getUserPurchases(userId),
         ]);
         
         const monthlyBudget = Number(settings.monthlyBudget || 500);
         
         return {
-          monthlyBudget,
-          monthlySpent,
-          remainingBudget: monthlyBudget - monthlySpent,
-          totalConsumed,
-          totalCigars,
-          totalCigarillos,
-          totalCigarettes,
-          totalSnus,
+          stats: {
+            monthlyBudget,
+            monthlySpent,
+            remainingBudget: monthlyBudget - monthlySpent,
+            totalConsumed,
+            totalCigars,
+            totalCigarillos,
+            totalCigarettes,
+            totalSnus,
+          },
+          preferences,
+          products,
+          consumption,
+          purchases,
         };
       }),
   }),
@@ -280,6 +297,20 @@ export const appRouter = router({
       await db.updateUserSettings(ctx.user.id, { shareToken: token });
       return { token };
     }),
+    
+    updateSharePreferences: protectedProcedure
+      .input(z.object({
+        dashboard: z.boolean(),
+        history: z.boolean(),
+        inventory: z.boolean(),
+        purchases: z.boolean(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateUserSettings(ctx.user.id, { 
+          sharePreferences: JSON.stringify(input) 
+        });
+        return { success: true };
+      }),
     
     revokeShareToken: protectedProcedure.mutation(async ({ ctx }) => {
       await db.updateUserSettings(ctx.user.id, { shareToken: null });

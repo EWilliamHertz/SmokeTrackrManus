@@ -76,6 +76,7 @@ export const userSettings = mysqlTable("userSettings", {
   startDate: timestamp("startDate"),
   dashboardLayout: text("dashboardLayout"), // JSON string for dashboard section order
   shareToken: varchar("shareToken", { length: 64 }).unique(), // For public read-only sharing
+  sharePreferences: text("sharePreferences"), // JSON string for share visibility settings
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
