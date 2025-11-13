@@ -133,13 +133,27 @@ export default function Settings() {
       })).filter((p: any) => p.productName);
 
       const consumption = consumptionData.map((row: any) => {
-        const date = row.Date || row.date;
-        const time = row.Time || row.time;
+        let date = row.Date || row.date;
+        let time = row.Time || row.time;
+        
+        // Convert Excel serial date to JS Date if needed
+        if (typeof date === 'number') {
+          const excelEpoch = new Date(1899, 11, 30); // Excel epoch
+          const jsDate = new Date(excelEpoch.getTime() + date * 86400000);
+          date = jsDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
+        }
+        
+        // Convert Excel time decimal to HH:MM if needed
+        if (typeof time === 'number') {
+          const hours = Math.floor(time * 24);
+          const minutes = Math.floor((time * 24 - hours) * 60);
+          time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
         
         // Handle date parsing
         let consumptionDate: string;
         if (time && time !== "None" && time !== null) {
-          consumptionDate = `${date}T${time}`;
+          consumptionDate = `${date}T${time}:00`;
         } else {
           consumptionDate = `${date}T00:00:00`;
         }

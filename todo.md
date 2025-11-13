@@ -40,3 +40,9 @@
 - [x] Test import end-to-end with user's actual Excel file
 - [x] Fix all remaining date/time parsing issues
 - [x] Verify import creates products, purchases, and consumption correctly
+
+## Backend Import Debugging
+- [x] Check server logs for actual import error
+- [x] Test tRPC import mutation with parsed data
+- [x] Fix backend date validation causing "Invalid time value"
+- [x] Convert Excel serial dates to proper ISO format
