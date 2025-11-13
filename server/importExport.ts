@@ -27,20 +27,33 @@ export const importExportRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       
-      // Create products and build name-to-id map
+      // Get existing products first
+      const existingProducts = await db.getUserProducts(userId);
       const productMap = new Map<string, number>();
       
-      for (const product of input.products) {
-        await db.createProduct({
-          userId,
-          name: product.name,
-          type: product.type,
-          flavorDetail: product.flavorDetail,
-        });
+      for (const existing of existingProducts) {
+        productMap.set(existing.name, existing.id);
       }
       
-      // Fetch all products to get IDs
+      // Create only new products
+      for (const product of input.products) {
+        if (!productMap.has(product.name)) {
+          try {
+            await db.createProduct({
+              userId,
+              name: product.name,
+              type: product.type,
+              flavorDetail: product.flavorDetail,
+            });
+          } catch (error) {
+            console.error(`Failed to create product ${product.name}:`, error);
+          }
+        }
+      }
+      
+      // Refresh product map with all products
       const allProducts = await db.getUserProducts(userId);
+      productMap.clear();
       for (const product of allProducts) {
         productMap.set(product.name, product.id);
       }

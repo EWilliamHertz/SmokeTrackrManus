@@ -3,7 +3,7 @@ import MobileNav from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { PlusCircle, TrendingUp, TrendingDown, History as HistoryIcon } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 
@@ -80,12 +80,20 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Link href="/consumption">
-          <Button className="w-full h-14 text-lg" size="lg">
-            <PlusCircle className="w-6 h-6 mr-2" />
-            Log Consumption
-          </Button>
-        </Link>
+        <div className="space-y-2">
+          <Link href="/consumption">
+            <Button className="w-full h-14 text-lg" size="lg">
+              <PlusCircle className="w-6 h-6 mr-2" />
+              Log Consumption
+            </Button>
+          </Link>
+          <Link href="/history">
+            <Button variant="outline" className="w-full h-12" size="lg">
+              <HistoryIcon className="w-5 h-5 mr-2" />
+              View History & Analytics
+            </Button>
+          </Link>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Card>

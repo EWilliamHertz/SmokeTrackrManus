@@ -17,3 +17,14 @@
 - [x] Export data to Excel functionality
 - [x] Parse Excel file structure (Consumption, Inventory, Purchase Log, Dashboard)
 - [x] Backend procedures for bulk data import
+
+## Bug Fixes
+- [x] Fix Excel import functionality
+
+## Analytics Features
+- [x] Consumption history page with timeline
+- [x] Product consumption summaries
+- [x] Period analytics (daily/weekly/monthly)
+- [x] Dominant product tracking
+- [x] Cost breakdown per product
+- [x] Total spending analysis
