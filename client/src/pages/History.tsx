@@ -2,15 +2,32 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import MobileNav from "@/components/MobileNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
-import { Calendar, TrendingUp } from "lucide-react";
+import { Calendar, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type Period = "day" | "week" | "month" | "all";
 
 export default function History() {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>("all");
+  const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [editQuantity, setEditQuantity] = useState("");
+  const [editProductId, setEditProductId] = useState("");
+  const [editDate, setEditDate] = useState("");
 
   const { data: consumption } = trpc.consumption.list.useQuery(undefined, {
     enabled: !!user,
@@ -23,6 +40,53 @@ export default function History() {
   const { data: purchases } = trpc.purchases.list.useQuery(undefined, {
     enabled: !!user,
   });
+
+  const utils = trpc.useUtils();
+
+  const updateConsumption = trpc.consumption.update.useMutation({
+    onSuccess: () => {
+      utils.consumption.list.invalidate();
+      utils.dashboard.stats.invalidate();
+      toast.success("Consumption updated!");
+      setEditingEntry(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to update: " + error.message);
+    },
+  });
+
+  const deleteConsumption = trpc.consumption.delete.useMutation({
+    onSuccess: () => {
+      utils.consumption.list.invalidate();
+      utils.dashboard.stats.invalidate();
+      toast.success("Consumption deleted!");
+      setDeleteConfirm(null);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete: " + error.message);
+    },
+  });
+
+  const handleEdit = (entry: any) => {
+    setEditingEntry(entry);
+    setEditQuantity(entry.quantity);
+    setEditProductId(entry.productId.toString());
+    setEditDate(new Date(entry.consumptionDate).toISOString().slice(0, 16));
+  };
+
+  const handleUpdate = () => {
+    if (!editingEntry) return;
+    updateConsumption.mutate({
+      id: editingEntry.id,
+      productId: parseInt(editProductId),
+      quantity: parseFloat(editQuantity),
+      consumptionDate: new Date(editDate),
+    });
+  };
+
+  const handleDelete = (id: number) => {
+    deleteConsumption.mutate({ id });
+  };
 
   // Calculate analytics
   const analytics = useMemo(() => {
@@ -250,7 +314,7 @@ export default function History() {
           </CardContent>
         </Card>
 
-        {/* Recent Consumption Log */}
+        {/* Recent Consumption Log with Edit/Delete */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Consumption</CardTitle>
@@ -263,18 +327,35 @@ export default function History() {
                 analytics.filteredConsumption
                   .slice()
                   .sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime())
-                  .slice(0, 10)
+                  .slice(0, 20)
                   .map((c) => {
                     const product = products?.find((p) => p.id === c.productId);
                     return (
                       <div key={c.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
-                        <div>
+                        <div className="flex-1">
                           <div className="font-medium">{product?.name || "Unknown"}</div>
                           <div className="text-xs text-muted-foreground">
-                            {new Date(c.consumptionDate).toLocaleString()}
+                            {new Date(c.consumptionDate).toLocaleString()} • {c.quantity} units
                           </div>
                         </div>
-                        <div className="font-medium">{c.quantity} units</div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(c)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => setDeleteConfirm(c.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     );
                   })
@@ -283,6 +364,85 @@ export default function History() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingEntry} onOpenChange={(open) => !open && setEditingEntry(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Consumption Entry</DialogTitle>
+            <DialogDescription>Update the quantity, product, or date for this entry.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-product">Product</Label>
+              <Select value={editProductId} onValueChange={setEditProductId}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {products?.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name} ({product.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-quantity">Quantity</Label>
+              <Input
+                id="edit-quantity"
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={editQuantity}
+                onChange={(e) => setEditQuantity(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-date">Date & Time</Label>
+              <Input
+                id="edit-date"
+                type="datetime-local"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingEntry(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdate} disabled={updateConsumption.isPending}>
+              {updateConsumption.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirm !== null} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Consumption Entry</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this entry? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteConfirm && handleDelete(deleteConfirm)}
+              disabled={deleteConsumption.isPending}
+            >
+              {deleteConsumption.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <MobileNav />
     </div>

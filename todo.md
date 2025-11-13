@@ -88,9 +88,9 @@
 
 ## New Feature Requests
 - [ ] Add start date tracking (account creation, updated to first consumption on import)
-- [ ] Add date range filtering to dashboard (Today/Week/Month/All Time presets)
+- [x] Add date range filtering to dashboard (Today/Week/Month/All Time presets)
 - [x] Support decimal quantities (0.3, 0.5) for partial consumption
 - [ ] Add dashboard edit mode with drag-and-drop section reordering
-- [ ] Add consumption entry editing (edit quantity, product, date)
-- [ ] Add consumption entry deletion
-- [ ] Create shareable public read-only view with link generation
+- [x] Add consumption entry editing (edit quantity, product, date)
+- [x] Add consumption entry deletion
+- [x] Create shareable public read-only view with link generation

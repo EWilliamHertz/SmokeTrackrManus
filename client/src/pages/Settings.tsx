@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Download, Upload } from "lucide-react";
+import { Download, Upload, Share2, Copy, RefreshCw } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
@@ -18,6 +18,7 @@ export default function Settings() {
   
   const [monthlyBudget, setMonthlyBudget] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [shareUrl, setShareUrl] = useState("");
 
   const utils = trpc.useUtils();
   const updateSettings = trpc.settings.update.useMutation({
@@ -42,6 +43,25 @@ export default function Settings() {
     },
     onError: (error) => {
       toast.error("Import failed: " + error.message);
+    },
+  });
+
+  const generateShareToken = trpc.settings.generateShareToken.useMutation({
+    onSuccess: (data) => {
+      const url = `${window.location.origin}/share/${data.token}`;
+      setShareUrl(url);
+      toast.success("Share link generated!");
+    },
+    onError: (error) => {
+      toast.error("Failed to generate link: " + error.message);
+    },
+  });
+
+  const revokeShareToken = trpc.settings.revokeShareToken.useMutation({
+    onSuccess: () => {
+      setShareUrl("");
+      utils.settings.get.invalidate();
+      toast.success("Share link revoked!");
     },
   });
 
@@ -258,6 +278,64 @@ export default function Settings() {
                 {updateSettings.isPending ? "Saving..." : "Save Budget"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Share Your Progress</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Generate a public read-only link to share your consumption stats with others.
+            </p>
+            {settings?.shareToken || shareUrl ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={shareUrl || `${window.location.origin}/share/${settings?.shareToken}`}
+                    readOnly
+                    className="flex-1"
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareUrl || `${window.location.origin}/share/${settings?.shareToken}`);
+                      toast.success("Link copied to clipboard!");
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => window.open(shareUrl || `/share/${settings?.shareToken}`, "_blank")}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Open Share Link
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => revokeShareToken.mutate()}
+                    disabled={revokeShareToken.isPending}
+                  >
+                    Revoke
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={() => generateShareToken.mutate()}
+                className="w-full"
+                disabled={generateShareToken.isPending}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                {generateShareToken.isPending ? "Generating..." : "Generate Share Link"}
+              </Button>
+            )}
           </CardContent>
         </Card>
 

@@ -172,27 +172,56 @@ export async function createConsumption(cons: InsertConsumption) {
   return await db.insert(consumption).values(cons);
 }
 
-export async function getTotalConsumption(userId: number) {
+export async function updateConsumption(id: number, userId: number, updates: Partial<InsertConsumption>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .update(consumption)
+    .set(updates)
+    .where(and(eq(consumption.id, id), eq(consumption.userId, userId)));
+}
+
+export async function deleteConsumption(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .delete(consumption)
+    .where(and(eq(consumption.id, id), eq(consumption.userId, userId)));
+}
+
+export async function getTotalConsumption(userId: number, startDate?: Date | null) {
   const db = await getDb();
   if (!db) return 0;
+  
+  const conditions = [eq(consumption.userId, userId)];
+  if (startDate) {
+    conditions.push(sql`${consumption.consumptionDate} >= ${startDate.toISOString()}`);
+  }
   
   const result = await db
     .select({ total: sum(consumption.quantity) })
     .from(consumption)
-    .where(eq(consumption.userId, userId));
+    .where(and(...conditions));
   
   return Number(result[0]?.total || 0);
 }
 
-export async function getConsumptionByType(userId: number, type: string) {
+export async function getConsumptionByType(userId: number, type: string, startDate?: Date | null) {
   const db = await getDb();
   if (!db) return 0;
+  
+  const conditions = [eq(consumption.userId, userId), sql`${products.type} = ${type}`];
+  if (startDate) {
+    conditions.push(sql`${consumption.consumptionDate} >= ${startDate.toISOString()}`);
+  }
   
   const result = await db
     .select({ total: sum(consumption.quantity) })
     .from(consumption)
     .innerJoin(products, eq(consumption.productId, products.id))
-    .where(and(eq(consumption.userId, userId), sql`${products.type} = ${type}`));
+    .where(and(...conditions));
   
   return Number(result[0]?.total || 0);
 }
@@ -203,6 +232,14 @@ export async function getUserSettings(userId: number) {
   if (!db) return null;
   
   const result = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+  return result[0] || null;
+}
+
+export async function getUserSettingsByShareToken(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(userSettings).where(eq(userSettings.shareToken, token)).limit(1);
   return result[0] || null;
 }
 
@@ -217,6 +254,16 @@ export async function upsertUserSettings(settings: InsertUserSettings) {
       updatedAt: new Date(),
     },
   });
+}
+
+export async function updateUserSettings(userId: number, updates: Partial<InsertUserSettings>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .update(userSettings)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(userSettings.userId, userId));
 }
 
 // Inventory calculations

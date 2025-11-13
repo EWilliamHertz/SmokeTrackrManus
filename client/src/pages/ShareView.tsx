@@ -1,45 +1,18 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import MobileNav from "@/components/MobileNav";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { PlusCircle, TrendingUp, TrendingDown, History as HistoryIcon, Calendar } from "lucide-react";
-import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
-import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { useRoute } from "wouter";
 
-type DateRange = "today" | "week" | "month" | "all";
+export default function ShareView() {
+  const [, params] = useRoute("/share/:token");
+  const token = params?.token || "";
 
-export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>("month");
-  
-  const { data: stats, isLoading } = trpc.dashboard.stats.useQuery(
-    { dateRange },
-    { enabled: !!user }
+  const { data: stats, isLoading, error } = trpc.share.getPublicStats.useQuery(
+    { token },
+    { enabled: !!token }
   );
 
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">SmokeTrackr</h1>
-          <Button asChild>
-            <a href={getLoginUrl()}>Sign In</a>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading || !stats) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -47,36 +20,27 @@ export default function Dashboard() {
     );
   }
 
+  if (error || !stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Invalid Share Link</h1>
+          <p className="text-muted-foreground">This link is invalid or has been revoked.</p>
+        </div>
+      </div>
+    );
+  }
+
   const budgetPercentage = (stats.monthlySpent / stats.monthlyBudget) * 100;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b border-border px-4 py-4">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border px-4 py-6">
         <h1 className="text-2xl font-bold text-foreground">SmokeTrackr</h1>
-        <p className="text-sm text-muted-foreground">Welcome back, {user.name}</p>
+        <p className="text-sm text-muted-foreground">Public Consumption Stats</p>
       </header>
 
       <main className="p-4 space-y-4 max-w-lg mx-auto">
-        {/* Date Range Filter */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
-              <Select value={dateRange} onValueChange={(value) => setDateRange(value as DateRange)}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20">
           <CardHeader>
             <CardTitle className="text-lg">Monthly Budget</CardTitle>
@@ -112,21 +76,6 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="space-y-2">
-          <Link href="/consumption">
-            <Button className="w-full h-14 text-lg" size="lg">
-              <PlusCircle className="w-6 h-6 mr-2" />
-              Log Consumption
-            </Button>
-          </Link>
-          <Link href="/history">
-            <Button variant="outline" className="w-full h-12" size="lg">
-              <HistoryIcon className="w-5 h-5 mr-2" />
-              View History & Analytics
-            </Button>
-          </Link>
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Card>
@@ -174,9 +123,12 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-      </main>
 
-      <MobileNav />
+        <div className="text-center text-sm text-muted-foreground pt-4">
+          <p>This is a read-only view of consumption statistics.</p>
+          <p className="mt-2">Powered by SmokeTrackr</p>
+        </div>
+      </main>
     </div>
   );
 }

@@ -21,11 +21,26 @@ export const appRouter = router({
 
   // Dashboard stats
   dashboard: router({
-    stats: protectedProcedure.query(async ({ ctx }) => {
+    stats: protectedProcedure
+      .input(z.object({
+        dateRange: z.enum(["today", "week", "month", "all"]).default("month"),
+      }))
+      .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
+      
+      // Calculate date filter based on range
+      let startDate: Date | null = null;
+      if (input.dateRange === "today") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (input.dateRange === "week") {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (input.dateRange === "month") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      // "all" means no date filter (startDate = null)
       
       const [
         settings,
@@ -38,11 +53,11 @@ export const appRouter = router({
       ] = await Promise.all([
         db.getUserSettings(userId),
         db.getMonthlySpending(userId, currentYear, currentMonth),
-        db.getTotalConsumption(userId),
-        db.getConsumptionByType(userId, "Cigar"),
-        db.getConsumptionByType(userId, "Cigarillo"),
-        db.getConsumptionByType(userId, "Cigarette"),
-        db.getConsumptionByType(userId, "Snus"),
+        db.getTotalConsumption(userId, startDate),
+        db.getConsumptionByType(userId, "Cigar", startDate),
+        db.getConsumptionByType(userId, "Cigarillo", startDate),
+        db.getConsumptionByType(userId, "Cigarette", startDate),
+        db.getConsumptionByType(userId, "Snus", startDate),
       ]);
       
       const monthlyBudget = Number(settings?.monthlyBudget || 500);
@@ -165,16 +180,85 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+    
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        productId: z.number(),
+        consumptionDate: z.date(),
+        quantity: z.number().positive(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateConsumption(input.id, ctx.user.id, {
+          productId: input.productId,
+          consumptionDate: input.consumptionDate,
+          quantity: input.quantity.toString(),
+        });
+        return { success: true };
+      }),
+    
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteConsumption(input.id, ctx.user.id);
+        return { success: true };
+      }),
   }),
 
   // Import/Export
   importExport: importExportRouter,
 
+  // Public share view
+  share: router({
+    getPublicStats: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const settings = await db.getUserSettingsByShareToken(input.token);
+        if (!settings) {
+          throw new Error("Invalid share token");
+        }
+        
+        const userId = settings.userId;
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+        
+        const [
+          monthlySpent,
+          totalConsumed,
+          totalCigars,
+          totalCigarillos,
+          totalCigarettes,
+          totalSnus,
+        ] = await Promise.all([
+          db.getMonthlySpending(userId, currentYear, currentMonth),
+          db.getTotalConsumption(userId),
+          db.getConsumptionByType(userId, "Cigar"),
+          db.getConsumptionByType(userId, "Cigarillo"),
+          db.getConsumptionByType(userId, "Cigarette"),
+          db.getConsumptionByType(userId, "Snus"),
+        ]);
+        
+        const monthlyBudget = Number(settings.monthlyBudget || 500);
+        
+        return {
+          monthlyBudget,
+          monthlySpent,
+          remainingBudget: monthlyBudget - monthlySpent,
+          totalConsumed,
+          totalCigars,
+          totalCigarillos,
+          totalCigarettes,
+          totalSnus,
+        };
+      }),
+  }),
+
   // Settings
   settings: router({
     get: protectedProcedure.query(async ({ ctx }) => {
       const settings = await db.getUserSettings(ctx.user.id);
-      return settings || { monthlyBudget: "500.00", currency: "SEK" };
+      return settings || { monthlyBudget: "500.00", currency: "SEK", shareToken: null };
     }),
     
     update: protectedProcedure
@@ -190,6 +274,17 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+    
+    generateShareToken: protectedProcedure.mutation(async ({ ctx }) => {
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      await db.updateUserSettings(ctx.user.id, { shareToken: token });
+      return { token };
+    }),
+    
+    revokeShareToken: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.updateUserSettings(ctx.user.id, { shareToken: null });
+      return { success: true };
+    }),
   }),
 });
 
