@@ -104,3 +104,9 @@
 
 ## Bug Fixes
 - [x] Fix JavaScript error in public share link (ShareView component)
+
+## Inventory Enhancement
+- [x] Display stock quantity for each product
+- [x] Show total consumed quantity
+- [x] Show total purchased quantity
+- [x] Add consumption rate or average usage metrics
