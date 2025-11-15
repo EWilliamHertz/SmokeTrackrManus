@@ -1,0 +1,90 @@
+{
+  "query": "SELECT * FROM giveaways WHERE userId = 1 ORDER BY giveawayDate DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT * FROM giveaways WHERE userId = 1 ORDER BY giveawayDate DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "9",
+      "userId": "1",
+      "productId": "120003",
+      "giveawayDate": "2025-11-15 11:59:35",
+      "quantity": "1.00",
+      "recipient": "Johannes Isacsson",
+      "notes": "Gift",
+      "createdAt": "2025-11-15 11:59:35"
+    },
+    {
+      "id": "8",
+      "userId": "1",
+      "productId": "120002",
+      "giveawayDate": "2025-11-15 11:58:14",
+      "quantity": "1.00",
+      "recipient": "Johnny Karrlen",
+      "notes": "Taste Sample",
+      "createdAt": "2025-11-15 11:58:13"
+    },
+    {
+      "id": "7",
+      "userId": "1",
+      "productId": "120015",
+      "giveawayDate": "2025-11-15 11:57:44",
+      "quantity": "1.00",
+      "recipient": "JZ",
+      "notes": "100kr ea",
+      "createdAt": "2025-11-15 11:57:43"
+    },
+    {
+      "id": "6",
+      "userId": "1",
+      "productId": "120012",
+      "giveawayDate": "2025-11-15 11:54:51",
+      "quantity": "28.00",
+      "recipient": "JZ ",
+      "notes": "20kr ea",
+      "createdAt": "2025-11-15 11:54:51"
+    },
+    {
+      "id": "5",
+      "userId": "1",
+      "productId": "120004",
+      "giveawayDate": "2025-11-15 11:53:07",
+      "quantity": "2.00",
+      "recipient": "Timo Sinkkonen ",
+      "notes": "Gift",
+      "createdAt": "2025-11-15 11:53:07"
+    },
+    {
+      "id": "4",
+      "userId": "1",
+      "productId": "120004",
+      "giveawayDate": "2025-11-15 11:49:05",
+      "quantity": "1.00",
+      "recipient": "Chris, Magic Player Falköping",
+      "notes": "Magic Gift",
+      "createdAt": "2025-11-15 11:49:05"
+    },
+    {
+      "id": "3",
+      "userId": "1",
+      "productId": "120004",
+      "giveawayDate": "2025-11-15 11:48:41",
+      "quantity": "3.00",
+      "recipient": "Johannes Isacsson",
+      "notes": "Gift",
+      "createdAt": "2025-11-15 11:48:41"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "productId": "120004",
+      "giveawayDate": "2025-11-15 11:48:24",
+      "quantity": "3.00",
+      "recipient": "Pappa, Peter Hertz",
+      "notes": "Fathers Day Present",
+      "createdAt": "2025-11-15 11:48:24"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tproductId\tgiveawayDate\tquantity\trecipient\tnotes\tcreatedAt\n9\t1\t120003\t2025-11-15 11:59:35\t1.00\tJohannes Isacsson\tGift\t2025-11-15 11:59:35\n8\t1\t120002\t2025-11-15 11:58:14\t1.00\tJohnny Karrlen\tTaste Sample\t2025-11-15 11:58:13\n7\t1\t120015\t2025-11-15 11:57:44\t1.00\tJZ\t100kr ea\t2025-11-15 11:57:43\n6\t1\t120012\t2025-11-15 11:54:51\t28.00\tJZ \t20kr ea\t2025-11-15 11:54:51\n5\t1\t120004\t2025-11-15 11:53:07\t2.00\tTimo Sinkkonen \tGift\t2025-11-15 11:53:07\n4\t1\t120004\t2025-11-15 11:49:05\t1.00\tChris, Magic Player Falköping\tMagic Gift\t2025-11-15 11:49:05\n3\t1\t120004\t2025-11-15 11:48:41\t3.00\tJohannes Isacsson\tGift\t2025-11-15 11:48:41\n2\t1\t120004\t2025-11-15 11:48:24\t3.00\tPappa, Peter Hertz\tFathers Day Present\t2025-11-15 11:48:24\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

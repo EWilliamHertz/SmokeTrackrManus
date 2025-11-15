@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as count, SUM(quantity) as total FROM giveaways WHERE userId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT COUNT(*) as count, SUM(quantity) as total FROM giveaways WHERE userId = 1;",
+  "rows": [
+    {
+      "count": "8",
+      "total": "40.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "count\ttotal\n8\t40.00\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
