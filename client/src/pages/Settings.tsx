@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Download, Upload, Share2, Copy, RefreshCw } from "lucide-react";
+import { Download, Upload, Share2, Copy, RefreshCw, Gift } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { Link } from "wouter";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -243,6 +244,13 @@ export default function Settings() {
             <CardTitle>Data Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <Link href="/giveaways">
+              <Button className="w-full" variant="outline">
+                <Gift className="w-4 h-4 mr-2" />
+                View Giveaway History
+              </Button>
+            </Link>
+            
             <Button onClick={handleExport} className="w-full" variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Export Data to Excel

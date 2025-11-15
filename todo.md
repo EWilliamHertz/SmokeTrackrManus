@@ -124,3 +124,11 @@
 - [x] Create Give Away dialog with product selection and quantity
 - [x] Update inventory calculations to subtract giveaways
 - [x] Show giveaway history (optional tracking)
+
+## Giveaways History Page
+- [x] Create Giveaways.tsx page component
+- [x] Display all giveaway transactions with dates, recipients, notes
+- [x] Add route for /giveaways
+- [x] Add navigation link to Giveaways page
+- [x] Show product details for each giveaway
+- [x] Sort by date (most recent first)

@@ -12,6 +12,7 @@ import Purchases from "./pages/Purchases";
 import Settings from "./pages/Settings";
 import ProductDetail from "./pages/ProductDetail";
 import ShareView from "./pages/ShareView";
+import Giveaways from "./pages/Giveaways";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path={"/purchases"} component={Purchases} />
       <Route path={"/settings"} component={Settings} />
       <Route path={"/product/:id"} component={ProductDetail} />
+      <Route path={"/giveaways"} component={Giveaways} />
       <Route path={"/share/:token"} component={ShareView} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
