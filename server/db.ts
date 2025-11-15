@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, sql, sum } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, purchases, consumption, userSettings, InsertProduct, InsertPurchase, InsertConsumption, InsertUserSettings } from "../drizzle/schema";
+import { InsertUser, users, products, purchases, consumption, userSettings, giveaways, InsertProduct, InsertPurchase, InsertConsumption, InsertUserSettings, InsertGiveaway } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -315,4 +315,49 @@ export async function deleteProduct(productId: number, userId: number) {
   
   // Then delete the product
   return await db.delete(products).where(and(eq(products.id, productId), eq(products.userId, userId)));
+}
+
+
+// ===== Giveaway Functions =====
+
+export async function createGiveaway(giveaway: InsertGiveaway) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(giveaways).values(giveaway);
+}
+
+export async function getGiveawaysByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: giveaways.id,
+      productId: giveaways.productId,
+      productName: products.name,
+      giveawayDate: giveaways.giveawayDate,
+      quantity: giveaways.quantity,
+      recipient: giveaways.recipient,
+      notes: giveaways.notes,
+      createdAt: giveaways.createdAt,
+    })
+    .from(giveaways)
+    .leftJoin(products, eq(giveaways.productId, products.id))
+    .where(eq(giveaways.userId, userId))
+    .orderBy(desc(giveaways.giveawayDate));
+  
+  return result;
+}
+
+export async function getTotalGiveawaysByProduct(userId: number, productId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ total: sum(giveaways.quantity) })
+    .from(giveaways)
+    .where(and(eq(giveaways.userId, userId), eq(giveaways.productId, productId)));
+  
+  return parseFloat(result[0]?.total || "0");
 }

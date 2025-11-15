@@ -116,3 +116,11 @@
 - [x] Move all hooks before conditional returns in ShareView
 - [x] Fix TypeScript errors (byType, totalPrice vs totalCost)
 - [x] Test share link on dev server
+
+## Give Away Feature
+- [x] Create giveaways table in database schema
+- [x] Add backend procedures for recording giveaways
+- [x] Add "Give Away" button to Inventory page
+- [x] Create Give Away dialog with product selection and quantity
+- [x] Update inventory calculations to subtract giveaways
+- [x] Show giveaway history (optional tracking)

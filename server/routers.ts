@@ -205,6 +205,33 @@ export const appRouter = router({
       }),
   }),
 
+  // Giveaways
+  giveaways: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getGiveawaysByUser(ctx.user.id);
+    }),
+    
+    create: protectedProcedure
+      .input(z.object({
+        productId: z.number(),
+        quantity: z.number(),
+        giveawayDate: z.string(),
+        recipient: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await db.createGiveaway({
+          userId: ctx.user.id,
+          productId: input.productId,
+          quantity: input.quantity.toString(),
+          giveawayDate: new Date(input.giveawayDate),
+          recipient: input.recipient,
+          notes: input.notes,
+        });
+        return { success: true };
+      }),
+  }),
+
   // Import/Export
   importExport: importExportRouter,
 

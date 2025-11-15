@@ -83,3 +83,20 @@ export const userSettings = mysqlTable("userSettings", {
 
 export type UserSettings = typeof userSettings.$inferSelect;
 export type InsertUserSettings = typeof userSettings.$inferInsert;
+
+/**
+ * Giveaways table - tracks products given away (not consumed)
+ */
+export const giveaways = mysqlTable("giveaways", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  productId: int("productId").notNull(),
+  giveawayDate: timestamp("giveawayDate").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  recipient: varchar("recipient", { length: 255 }), // Optional: who received it
+  notes: text("notes"), // Optional: reason or notes
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Giveaway = typeof giveaways.$inferSelect;
+export type InsertGiveaway = typeof giveaways.$inferInsert;
