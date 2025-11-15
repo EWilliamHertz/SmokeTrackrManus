@@ -139,3 +139,13 @@
 - [x] Add daily and weekly view toggles
 - [x] Integrate chart into History page
 - [x] Show consumption patterns over time
+
+## Bug Fixes (Nov 15)
+- [x] Fix Panetelas showing 1.00000000000000018 instead of correct stock value (rounded to 2 decimals)
+- [x] Fix stock calculation formula to handle decimal quantities correctly (Math.round * 100 / 100)
+- [x] Add stock validation to prevent negative stock in Give Away feature
+
+## Share Link Improvements
+- [x] Add consumption trends chart to ShareView History tab
+- [x] Ensure recharts library works on public share links
+- [x] Include giveaways data in share router for accurate stock calculations

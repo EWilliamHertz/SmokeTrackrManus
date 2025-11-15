@@ -66,7 +66,7 @@ export default function Inventory() {
         (sum, g) => sum + parseFloat(g.quantity),
         0
       );
-      const stock = totalPurchased - totalConsumed - totalGivenAway;
+      const stock = Math.round((totalPurchased - totalConsumed - totalGivenAway) * 100) / 100;
 
       // Calculate average consumption per day (if there's consumption data)
       let avgPerDay = 0;

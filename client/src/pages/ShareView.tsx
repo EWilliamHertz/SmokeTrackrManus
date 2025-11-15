@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { TrendingUp, TrendingDown, Calendar, Package, ShoppingCart, History as HistoryIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, Calendar, Package, ShoppingCart, History as HistoryIcon, BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useRoute } from "wouter";
 import { useState, useMemo, useEffect } from "react";
 
@@ -98,7 +99,7 @@ export default function ShareView() {
   const inventory = useMemo(() => {
     if (!shareData?.products || !shareData?.purchases || !shareData?.consumption) return [];
     
-    const { products, purchases, consumption } = shareData;
+    const { products, purchases, consumption, giveaways } = shareData;
     return products.map((product) => {
       const purchased = purchases
         .filter((p) => p.productId === product.id)
@@ -106,13 +107,16 @@ export default function ShareView() {
       const consumed = consumption
         .filter((c) => c.productId === product.id)
         .reduce((sum, c) => sum + parseFloat(c.quantity), 0);
+      const givenAway = (giveaways || [])
+        .filter((g: any) => g.productId === product.id)
+        .reduce((sum: number, g: any) => sum + parseFloat(g.quantity), 0);
       
       return {
         ...product,
-        stock: purchased - consumed,
+        stock: Math.round((purchased - consumed - givenAway) * 100) / 100,
       };
     });
-  }, [shareData?.products, shareData?.purchases, shareData?.consumption]);
+  }, [shareData?.products, shareData?.purchases, shareData?.consumption, shareData?.giveaways]);
 
   // Update activeTab when firstVisibleTab changes
   useEffect(() => {
@@ -286,6 +290,50 @@ export default function ShareView() {
         {/* History Tab */}
         {validActiveTab === "history" && visibleTabs.history && (
           <>
+            {/* Consumption Trends Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Consumption Trends (Last 30 Days)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart
+                    data={(() => {
+                      if (!shareData?.consumption) return [];
+                      const last30Days = new Date();
+                      last30Days.setDate(last30Days.getDate() - 30);
+                      const dailyData = new Map<string, number>();
+                      shareData.consumption
+                        .filter(c => new Date(c.consumptionDate) >= last30Days)
+                        .forEach(c => {
+                          const date = new Date(c.consumptionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          dailyData.set(date, (dailyData.get(date) || 0) + parseFloat(c.quantity));
+                        });
+                      return Array.from(dailyData.entries())
+                        .map(([date, quantity]) => ({ date, quantity }))
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    })()}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                    />
+                    <Bar dataKey="quantity" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardContent className="pt-6">

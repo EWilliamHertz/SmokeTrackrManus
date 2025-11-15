@@ -265,6 +265,7 @@ export const appRouter = router({
           products,
           consumption,
           purchases,
+          giveaways,
         ] = await Promise.all([
           db.getMonthlySpending(userId, currentYear, currentMonth),
           db.getTotalConsumption(userId),
@@ -275,6 +276,7 @@ export const appRouter = router({
           db.getUserProducts(userId),
           db.getUserConsumption(userId),
           db.getUserPurchases(userId),
+          db.getGiveawaysByUser(userId),
         ]);
         
         const monthlyBudget = Number(settings.monthlyBudget || 500);
@@ -294,6 +296,7 @@ export const appRouter = router({
           products,
           consumption,
           purchases,
+          giveaways,
         };
       }),
   }),

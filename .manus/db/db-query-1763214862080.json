@@ -1,0 +1,18 @@
+{
+  "query": "\nSELECT \n  p.id, p.name,\n  COALESCE(SUM(pu.quantity), 0) as total_purchased,\n  COALESCE(SUM(c.quantity), 0) as total_consumed,\n  COALESCE(SUM(g.quantity), 0) as total_given_away,\n  (COALESCE(SUM(pu.quantity), 0) - COALESCE(SUM(c.quantity), 0) - COALESCE(SUM(g.quantity), 0)) as calculated_stock\nFROM products p\nLEFT JOIN purchases pu ON p.id = pu.productId\nLEFT JOIN consumption c ON p.id = c.productId\nLEFT JOIN giveaways g ON p.id = g.productId\nWHERE p.name LIKE '%Nicaragua%'\nGROUP BY p.id, p.name;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute \nSELECT \n  p.id, p.name,\n  COALESCE(SUM(pu.quantity), 0) as total_purchased,\n  COALESCE(SUM(c.quantity), 0) as total_consumed,\n  COALESCE(SUM(g.quantity), 0) as total_given_away,\n  (COALESCE(SUM(pu.quantity), 0) - COALESCE(SUM(c.quantity), 0) - COALESCE(SUM(g.quantity), 0)) as calculated_stock\nFROM products p\nLEFT JOIN purchases pu ON p.id = pu.productId\nLEFT JOIN consumption c ON p.id = c.productId\nLEFT JOIN giveaways g ON p.id = g.productId\nWHERE p.name LIKE '%Nicaragua%'\nGROUP BY p.id, p.name;\n",
+  "rows": [
+    {
+      "id": "120012",
+      "name": "Nicaragua Short Puritos",
+      "total_purchased": "120",
+      "total_consumed": "3.00",
+      "total_given_away": "112.00",
+      "calculated_stock": "5.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttotal_purchased\ttotal_consumed\ttotal_given_away\tcalculated_stock\n120012\tNicaragua Short Puritos\t120\t3.00\t112.00\t5.00\n",
+  "stderr": "",
+  "execution_time_ms": 343
+}
