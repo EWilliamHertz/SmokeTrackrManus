@@ -1,8 +1,0 @@
-{
-  "query": "SELECT DATE(c.consumptionDate) as date, p.name as product, c.quantity \nFROM consumption c \nJOIN products p ON c.productId = p.id \nORDER BY c.consumptionDate, p.name \nINTO OUTFILE '/tmp/db_consumption.csv' \nFIELDS TERMINATED BY ',' \nENCLOSED BY '\"' \nLINES TERMINATED BY '\\n';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT DATE(c.consumptionDate) as date, p.name as product, c.quantity \nFROM consumption c \nJOIN products p ON c.productId = p.id \nORDER BY c.consumptionDate, p.name \nINTO OUTFILE '/tmp/db_consumption.csv' \nFIELDS TERMINATED BY ',' \nENCLOSED BY '\"' \nLINES TERMINATED BY '\\n';",
-  "returncode": 1,
-  "logs": [
-    "ERROR 8132 (HY000) at line 1: Feature 'SELECT INTO' is not supported when security enhanced mode is enabled"
-  ]
-}
