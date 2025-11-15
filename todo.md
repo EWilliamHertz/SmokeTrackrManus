@@ -110,3 +110,9 @@
 - [x] Show total consumed quantity
 - [x] Show total purchased quantity
 - [x] Add consumption rate or average usage metrics
+
+## Share Link Bug Fix (Nov 15)
+- [x] Fix "Rendered more hooks than during the previous render" error
+- [x] Move all hooks before conditional returns in ShareView
+- [x] Fix TypeScript errors (byType, totalPrice vs totalCost)
+- [x] Test share link on dev server

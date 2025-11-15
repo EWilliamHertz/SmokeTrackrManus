@@ -1,0 +1,28 @@
+{
+  "query": "SELECT c.id, c.consumptionDate, c.quantity, p.name \nFROM consumption c \nJOIN products p ON c.productId = p.id \nWHERE p.name = 'Brobergs Arcadia' \nORDER BY c.consumptionDate;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT c.id, c.consumptionDate, c.quantity, p.name \nFROM consumption c \nJOIN products p ON c.productId = p.id \nWHERE p.name = 'Brobergs Arcadia' \nORDER BY c.consumptionDate;",
+  "rows": [
+    {
+      "id": "120172",
+      "consumptionDate": "2025-11-13 13:19:00",
+      "quantity": "0.30",
+      "name": "Brobergs Arcadia"
+    },
+    {
+      "id": "180001",
+      "consumptionDate": "2025-11-13 16:15:00",
+      "quantity": "0.70",
+      "name": "Brobergs Arcadia"
+    },
+    {
+      "id": "270001",
+      "consumptionDate": "2025-11-14 09:18:00",
+      "quantity": "1.00",
+      "name": "Brobergs Arcadia"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tconsumptionDate\tquantity\tname\n120172\t2025-11-13 13:19:00\t0.30\tBrobergs Arcadia\n180001\t2025-11-13 16:15:00\t0.70\tBrobergs Arcadia\n270001\t2025-11-14 09:18:00\t1.00\tBrobergs Arcadia\n",
+  "stderr": "",
+  "execution_time_ms": 599
+}

@@ -1,0 +1,50 @@
+{
+  "query": "SELECT \n  DATE(consumptionDate) as date,\n  COUNT(*) as entries,\n  SUM(CAST(quantity AS DECIMAL(10,2))) as total_quantity\nFROM consumption c\nJOIN products p ON c.productId = p.id\nWHERE p.name = 'Brobergs Arcadia'\nGROUP BY DATE(consumptionDate)\nORDER BY date;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT \n  DATE(consumptionDate) as date,\n  COUNT(*) as entries,\n  SUM(CAST(quantity AS DECIMAL(10,2))) as total_quantity\nFROM consumption c\nJOIN products p ON c.productId = p.id\nWHERE p.name = 'Brobergs Arcadia'\nGROUP BY DATE(consumptionDate)\nORDER BY date;",
+  "rows": [
+    {
+      "date": "2025-11-07",
+      "entries": "3",
+      "total_quantity": "3.00"
+    },
+    {
+      "date": "2025-11-08",
+      "entries": "4",
+      "total_quantity": "3.00"
+    },
+    {
+      "date": "2025-11-09",
+      "entries": "2",
+      "total_quantity": "1.00"
+    },
+    {
+      "date": "2025-11-10",
+      "entries": "5",
+      "total_quantity": "2.80"
+    },
+    {
+      "date": "2025-11-11",
+      "entries": "4",
+      "total_quantity": "1.70"
+    },
+    {
+      "date": "2025-11-12",
+      "entries": "5",
+      "total_quantity": "2.50"
+    },
+    {
+      "date": "2025-11-13",
+      "entries": "4",
+      "total_quantity": "2.00"
+    },
+    {
+      "date": "2025-11-14",
+      "entries": "2",
+      "total_quantity": "2.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "date\tentries\ttotal_quantity\n2025-11-07\t3\t3.00\n2025-11-08\t4\t3.00\n2025-11-09\t2\t1.00\n2025-11-10\t5\t2.80\n2025-11-11\t4\t1.70\n2025-11-12\t5\t2.50\n2025-11-13\t4\t2.00\n2025-11-14\t2\t2.00\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}
