@@ -132,3 +132,10 @@
 - [x] Add navigation link to Giveaways page
 - [x] Show product details for each giveaway
 - [x] Sort by date (most recent first)
+
+## Consumption Trends Chart
+- [x] Install chart library (recharts)
+- [x] Create consumption trends component with line/bar chart
+- [x] Add daily and weekly view toggles
+- [x] Integrate chart into History page
+- [x] Show consumption patterns over time

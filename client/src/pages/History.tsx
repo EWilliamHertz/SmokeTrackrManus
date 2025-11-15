@@ -13,10 +13,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { Calendar, TrendingUp, Pencil, Trash2 } from "lucide-react";
+import { Calendar, TrendingUp, Pencil, Trash2, BarChart3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 type Period = "day" | "week" | "month" | "all";
 
@@ -28,6 +30,7 @@ export default function History() {
   const [editQuantity, setEditQuantity] = useState("");
   const [editProductId, setEditProductId] = useState("");
   const [editDate, setEditDate] = useState("");
+  const [chartView, setChartView] = useState<"daily" | "weekly">("daily");
 
   const { data: consumption } = trpc.consumption.list.useQuery(undefined, {
     enabled: !!user,
@@ -51,7 +54,7 @@ export default function History() {
       setEditingEntry(null);
     },
     onError: (error) => {
-      toast.error("Failed to update: " + error.message);
+      toast.error(`Failed to update: ${error.message}`);
     },
   });
 
@@ -63,23 +66,123 @@ export default function History() {
       setDeleteConfirm(null);
     },
     onError: (error) => {
-      toast.error("Failed to delete: " + error.message);
+      toast.error(`Failed to delete: ${error.message}`);
     },
   });
 
+  const productMap = useMemo(() => {
+    if (!products) return {};
+    return Object.fromEntries(products.map((p) => [p.id, p]));
+  }, [products]);
+
+  const purchasesByProduct = useMemo(() => {
+    if (!purchases) return {};
+    const map: Record<number, number> = {};
+    for (const p of purchases) {
+      map[p.productId] = (map[p.productId] || 0) + p.quantity;
+    }
+    return map;
+  }, [purchases]);
+
+  const filteredConsumption = useMemo(() => {
+    if (!consumption) return [];
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date(today);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+    return consumption.filter((c) => {
+      const date = new Date(c.consumptionDate);
+      if (period === "day") return date >= today;
+      if (period === "week") return date >= weekAgo;
+      if (period === "month") return date >= monthAgo;
+      return true;
+    });
+  }, [consumption, period]);
+
+  // Chart data calculation
+  const chartData = useMemo(() => {
+    if (!filteredConsumption || filteredConsumption.length === 0) return [];
+
+    if (chartView === "daily") {
+      // Group by day
+      const byDay: Record<string, number> = {};
+      filteredConsumption.forEach((c) => {
+        const date = new Date(c.consumptionDate);
+        const key = date.toISOString().split('T')[0];
+        byDay[key] = (byDay[key] || 0) + parseFloat(c.quantity as any);
+      });
+
+      return Object.entries(byDay)
+        .map(([date, quantity]) => ({
+          date: new Date(date).toLocaleDateString('sv-SE', { month: 'short', day: 'numeric' }),
+          quantity: Number(quantity.toFixed(2)),
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-30); // Last 30 days
+    } else {
+      // Group by week
+      const byWeek: Record<string, number> = {};
+      filteredConsumption.forEach((c) => {
+        const date = new Date(c.consumptionDate);
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        const key = weekStart.toISOString().split('T')[0];
+        byWeek[key] = (byWeek[key] || 0) + parseFloat(c.quantity as any);
+      });
+
+      return Object.entries(byWeek)
+        .map(([date, quantity]) => ({
+          date: `Week of ${new Date(date).toLocaleDateString('sv-SE', { month: 'short', day: 'numeric' })}`,
+          quantity: Number(quantity.toFixed(2)),
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-12); // Last 12 weeks
+    }
+  }, [filteredConsumption, chartView]);
+
+  const byProduct = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const c of filteredConsumption) {
+      map[c.productId] = (map[c.productId] || 0) + parseFloat(c.quantity as any);
+    }
+    return map;
+  }, [filteredConsumption]);
+
+  const totalItems = useMemo(
+    () => filteredConsumption.reduce((sum, c) => sum + parseFloat(c.quantity as any), 0),
+    [filteredConsumption]
+  );
+
+  const totalCost = useMemo(() => {
+    if (!purchases) return 0;
+    return filteredConsumption.reduce((sum, c) => {
+      const product = productMap[c.productId];
+      if (!product) return sum;
+      const productPurchases = purchases.filter((p) => p.productId === c.productId);
+      if (productPurchases.length === 0) return sum;
+      const avgCost =
+        productPurchases.reduce((s, p) => s + parseFloat(p.totalCost), 0) /
+        productPurchases.reduce((s, p) => s + p.quantity, 0);
+      return sum + avgCost * parseFloat(c.quantity as any);
+    }, 0);
+  }, [filteredConsumption, purchases, productMap]);
+
   const handleEdit = (entry: any) => {
     setEditingEntry(entry);
-    setEditQuantity(entry.quantity);
+    setEditQuantity(entry.quantity.toString());
     setEditProductId(entry.productId.toString());
-    setEditDate(new Date(entry.consumptionDate).toISOString().slice(0, 16));
+    setEditDate(new Date(entry.consumptionDate).toISOString().split('T')[0]);
   };
 
   const handleUpdate = () => {
     if (!editingEntry) return;
     updateConsumption.mutate({
       id: editingEntry.id,
-      productId: parseInt(editProductId),
       quantity: parseFloat(editQuantity),
+      productId: parseInt(editProductId),
       consumptionDate: new Date(editDate),
     });
   };
@@ -88,322 +191,211 @@ export default function History() {
     deleteConsumption.mutate({ id });
   };
 
-  // Calculate analytics
-  const analytics = useMemo(() => {
-    if (!consumption || !products || !purchases) {
-      return {
-        totalItems: 0,
-        totalCost: 0,
-        byProduct: [],
-        byType: {},
-        dominantProduct: null,
-        filteredConsumption: [],
-      };
-    }
-
-    // Filter by period
-    const now = new Date();
-    const filteredConsumption = consumption.filter((c) => {
-      const date = new Date(c.consumptionDate);
-      if (period === "all") return true;
-      if (period === "day") {
-        return date.toDateString() === now.toDateString();
-      }
-      if (period === "week") {
-        const weekAgo = new Date(now);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return date >= weekAgo;
-      }
-      if (period === "month") {
-        const monthAgo = new Date(now);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        return date >= monthAgo;
-      }
-      return true;
-    });
-
-    // Build product map
-    const productMap = new Map(products.map((p) => [p.id, p]));
-
-    // Build purchase map for pricing
-    const priceMap = new Map<number, number>();
-    for (const purchase of purchases) {
-      if (!priceMap.has(purchase.productId)) {
-        priceMap.set(purchase.productId, parseFloat(purchase.pricePerItem));
-      }
-    }
-
-    // Calculate totals
-    let totalItems = 0;
-    let totalCost = 0;
-    const productStats = new Map<number, { name: string; type: string; quantity: number; cost: number }>();
-    const typeStats = new Map<string, number>();
-
-    for (const c of filteredConsumption) {
-      const product = productMap.get(c.productId);
-      const price = priceMap.get(c.productId) || 0;
-      const qty = parseFloat(c.quantity);
-      const cost = qty * price;
-
-      totalItems += qty;
-      totalCost += cost;
-
-      // By product
-      const existing = productStats.get(c.productId);
-      if (existing) {
-        existing.quantity += qty;
-        existing.cost += cost;
-      } else if (product) {
-        productStats.set(c.productId, {
-          name: product.name,
-          type: product.type,
-          quantity: qty,
-          cost,
-        });
-      }
-
-      // By type
-      if (product) {
-        typeStats.set(product.type, (typeStats.get(product.type) || 0) + qty);
-      }
-    }
-
-    // Sort by quantity
-    const byProduct = Array.from(productStats.values()).sort((a, b) => b.quantity - a.quantity);
-
-    const dominantProduct = byProduct.length > 0 ? byProduct[0] : null;
-
-    return {
-      totalItems,
-      totalCost,
-      byProduct,
-      byType: Object.fromEntries(typeStats),
-      dominantProduct,
-      filteredConsumption,
-    };
-  }, [consumption, products, purchases, period]);
-
-  const periodLabels: Record<Period, string> = {
-    day: "Today",
-    week: "This Week",
-    month: "This Month",
-    all: "All Time",
-  };
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please log in to view history</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b border-border px-4 py-4">
-        <h1 className="text-xl font-bold">Consumption History</h1>
-      </header>
+      <div className="container py-8">
+        <div className="flex items-center gap-2 mb-6">
+          <TrendingUp className="h-8 w-8" />
+          <h1 className="text-3xl font-bold">History & Analytics</h1>
+        </div>
 
-      <main className="p-4 space-y-4 max-w-2xl mx-auto">
-        {/* Period Selector */}
-        <Card>
+        <div className="mb-6">
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="day">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Consumption Trends Chart */}
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Time Period
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                <CardTitle>Consumption Trends</CardTitle>
+              </div>
+              <Tabs value={chartView} onValueChange={(v) => setChartView(v as "daily" | "weekly")}>
+                <TabsList>
+                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-4 gap-2">
-              {(["day", "week", "month", "all"] as Period[]).map((p) => (
-                <Button
-                  key={p}
-                  variant={period === p ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPeriod(p)}
-                  className="text-xs"
-                >
-                  {periodLabels[p]}
-                </Button>
-              ))}
-            </div>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="date" 
+                    className="text-xs"
+                    tick={{ fill: 'currentColor' }}
+                  />
+                  <YAxis 
+                    className="text-xs"
+                    tick={{ fill: 'currentColor' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Bar dataKey="quantity" fill="hsl(var(--primary))" name="Consumed" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No consumption data for this period
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">{analytics.totalItems}</div>
-              <div className="text-sm text-muted-foreground">Total Items</div>
+            <CardHeader>
+              <CardTitle>Total Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">{totalItems.toFixed(1)}</p>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">{analytics.totalCost.toFixed(2)} SEK</div>
-              <div className="text-sm text-muted-foreground">Total Cost</div>
+            <CardHeader>
+              <CardTitle>Total Cost</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">{totalCost.toFixed(2)} SEK</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Dominant Product */}
-        {analytics.dominantProduct && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                Most Consumed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{analytics.dominantProduct.name}</span>
-                  <span className="text-sm text-muted-foreground">{analytics.dominantProduct.type}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>{analytics.dominantProduct.quantity} units</span>
-                  <span className="font-medium">{analytics.dominantProduct.cost.toFixed(2)} SEK</span>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {((analytics.dominantProduct.quantity / analytics.totalItems) * 100).toFixed(1)}% of total
-                  consumption
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* By Product Breakdown */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Consumption by Product</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {analytics.byProduct.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No consumption data for this period</p>
-              ) : (
-                analytics.byProduct.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center border-b border-border pb-2 last:border-0">
-                    <div className="flex-1">
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-muted-foreground">{item.type}</div>
+            <div className="space-y-4">
+              {Object.entries(byProduct)
+                .sort(([, a], [, b]) => b - a)
+                .map(([productId, quantity]) => {
+                  const product = productMap[Number(productId)];
+                  if (!product) return null;
+                  return (
+                    <div key={productId} className="flex justify-between items-center">
+                      <span>{product.name}</span>
+                      <span className="font-semibold">{quantity.toFixed(1)}</span>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium">{item.quantity} units</div>
-                      <div className="text-sm text-muted-foreground">{item.cost.toFixed(2)} SEK</div>
-                    </div>
-                  </div>
-                ))
-              )}
+                  );
+                })}
             </div>
           </CardContent>
         </Card>
 
-        {/* By Type Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Consumption by Type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {Object.entries(analytics.byType).length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No consumption data for this period</p>
-              ) : (
-                Object.entries(analytics.byType).map(([type, count]) => (
-                  <div key={type} className="flex justify-between items-center">
-                    <span className="text-sm">{type}</span>
-                    <span className="font-medium">{count} units</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Consumption Log with Edit/Delete */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Consumption</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {analytics.filteredConsumption.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No consumption logged yet</p>
-              ) : (
-                analytics.filteredConsumption
-                  .slice()
-                  .sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime())
-                  .slice(0, 20)
-                  .map((c) => {
-                    const product = products?.find((p) => p.id === c.productId);
-                    return (
-                      <div key={c.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0">
-                        <div className="flex-1">
-                          <div className="font-medium">{product?.name || "Unknown"}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(c.consumptionDate).toLocaleString()} • {c.quantity} units
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEdit(c)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => setDeleteConfirm(c.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+            <div className="space-y-4">
+              {filteredConsumption
+                .sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime())
+                .slice(0, 20)
+                .map((entry) => {
+                  const product = productMap[entry.productId];
+                  if (!product) return null;
+                  return (
+                    <div key={entry.id} className="flex items-center justify-between border-b pb-2">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(entry.consumptionDate).toLocaleDateString()} • {parseFloat(entry.quantity as any).toFixed(1)} consumed
+                          </p>
                         </div>
                       </div>
-                    );
-                  })
-              )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(entry)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteConfirm(entry.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
+
+      <MobileNav />
 
       {/* Edit Dialog */}
       <Dialog open={!!editingEntry} onOpenChange={(open) => !open && setEditingEntry(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Consumption Entry</DialogTitle>
-            <DialogDescription>Update the quantity, product, or date for this entry.</DialogDescription>
+            <DialogTitle>Edit Consumption</DialogTitle>
+            <DialogDescription>Update the consumption details</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-product">Product</Label>
+          <div className="space-y-4">
+            <div>
+              <Label>Product</Label>
               <Select value={editProductId} onValueChange={setEditProductId}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {products?.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name} ({product.type})
+                  {products?.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>
+                      {p.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-quantity">Quantity</Label>
+            <div>
+              <Label>Quantity</Label>
               <Input
-                id="edit-quantity"
                 type="number"
-                min="0.1"
                 step="0.1"
                 value={editQuantity}
                 onChange={(e) => setEditQuantity(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-date">Date & Time</Label>
+            <div>
+              <Label>Date</Label>
               <Input
-                id="edit-date"
-                type="datetime-local"
+                type="date"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
               />
@@ -414,19 +406,19 @@ export default function History() {
               Cancel
             </Button>
             <Button onClick={handleUpdate} disabled={updateConsumption.isPending}>
-              {updateConsumption.isPending ? "Saving..." : "Save Changes"}
+              {updateConsumption.isPending ? "Updating..." : "Update"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirm !== null} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Consumption Entry</DialogTitle>
+            <DialogTitle>Delete Consumption</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this entry? This action cannot be undone.
+              Are you sure you want to delete this consumption entry? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -443,8 +435,6 @@ export default function History() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <MobileNav />
     </div>
   );
 }
