@@ -128,13 +128,41 @@ export default function Dashboard() {
           </Link>
         </div>
 
+        {/* Consumption Insights */}
+        <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Consumption Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-2xl font-bold">{stats.totalConsumed}</div>
+                <div className="text-xs text-muted-foreground mt-1">Total Items</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {(() => {
+                    const days = dateRange === "today" ? 1 : dateRange === "week" ? 7 : dateRange === "month" ? 30 : 365;
+                    const avgPerDay = stats.totalConsumed / days;
+                    return avgPerDay.toFixed(1);
+                  })()}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Avg/Day</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Total Consumed</CardTitle>
+              <CardTitle className="text-sm text-muted-foreground">Cigars</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalConsumed}</div>
+              <div className="text-2xl font-bold">{stats.totalCigars}</div>
             </CardContent>
           </Card>
 

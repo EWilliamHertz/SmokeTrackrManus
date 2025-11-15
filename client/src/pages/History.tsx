@@ -330,7 +330,7 @@ export default function History() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(entry.consumptionDate).toLocaleDateString()} • {parseFloat(entry.quantity as any).toFixed(1)} consumed
+                            {new Date(entry.consumptionDate).toLocaleDateString()} {new Date(entry.consumptionDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {parseFloat(entry.quantity as any).toFixed(1)} consumed
                           </p>
                         </div>
                       </div>

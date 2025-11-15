@@ -149,3 +149,20 @@
 - [x] Add consumption trends chart to ShareView History tab
 - [x] Ensure recharts library works on public share links
 - [x] Include giveaways data in share router for accurate stock calculations
+
+## Critical Bug - Data Discrepancy (Nov 15)
+- [x] Fix data mismatch between personal tracker (116.1) and public share view (148.43)
+- [x] Investigate why authenticated dashboard shows different numbers than share view (personal defaults to "This Month", share shows "All Time")
+- [x] Add "All Time Data" label to share view header for clarity
+- [x] Verified both views query the same database tables correctly
+
+## Time Display Issues
+- [x] Fix time display on consumption log entries in History page
+- [x] Show proper timestamps for all consumption entries
+- [x] Add time display to ShareView consumption entries
+- [x] Ensure consistent time formatting across all views
+
+## New Features & Enhancements (Nov 15)
+- [x] Add Consumption Insights card to Dashboard showing total items and avg/day
+- [x] Add quick quantity buttons (0.3, 0.5, 1, 2) to consumption form
+- [x] Fix duplicate "Cigars" label (changed to "Cigarillos")
