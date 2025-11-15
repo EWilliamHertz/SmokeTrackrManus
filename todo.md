@@ -132,3 +132,11 @@
 - [x] Add navigation link to Giveaways page
 - [x] Show product details for each giveaway
 - [x] Sort by date (most recent first)
+
+## Data Synchronization
+- [x] Extract all consumption entries from Excel spreadsheet
+- [x] Extract all consumption entries from database
+- [x] Compare and identify missing entries in database
+- [x] Insert missing consumption records without duplicates
+- [x] Verify total consumption matches between Excel and app (145.13)
+- [x] Do not touch giveaway data

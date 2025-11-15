@@ -1,0 +1,46 @@
+{
+  "query": "SELECT p.name, SUM(c.quantity) as total \nFROM consumption c \nJOIN products p ON c.productId = p.id \nWHERE c.userId = 1 \nGROUP BY p.name \nORDER BY p.name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4FysZ9MrVV6QjYg.root --database EyQJop6MbQkDXkB9byGYLR --execute SELECT p.name, SUM(c.quantity) as total \nFROM consumption c \nJOIN products p ON c.productId = p.id \nWHERE c.userId = 1 \nGROUP BY p.name \nORDER BY p.name;",
+  "rows": [
+    {
+      "name": "Brobergs Arcadia",
+      "total": "20.00"
+    },
+    {
+      "name": "Handelsgold Blond",
+      "total": "7.00"
+    },
+    {
+      "name": "Handelsgold Blue",
+      "total": "4.00"
+    },
+    {
+      "name": "Handelsgold Red",
+      "total": "4.00"
+    },
+    {
+      "name": "Marlboro Crafted 100s",
+      "total": "77.00"
+    },
+    {
+      "name": "Nicaragua Short Puritos",
+      "total": "2.00"
+    },
+    {
+      "name": "Panetelas",
+      "total": "9.00"
+    },
+    {
+      "name": "Reserve 10th Anniversary Puritos",
+      "total": "1.00"
+    },
+    {
+      "name": "XQS Strawberry Kiwi",
+      "total": "8.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\ttotal\nBrobergs Arcadia\t20.00\nHandelsgold Blond\t7.00\nHandelsgold Blue\t4.00\nHandelsgold Red\t4.00\nMarlboro Crafted 100s\t77.00\nNicaragua Short Puritos\t2.00\nPanetelas\t9.00\nReserve 10th Anniversary Puritos\t1.00\nXQS Strawberry Kiwi\t8.00\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
