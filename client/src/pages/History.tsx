@@ -31,6 +31,8 @@ export default function History() {
   const [editProductId, setEditProductId] = useState("");
   const [editDate, setEditDate] = useState("");
   const [chartView, setChartView] = useState<"daily" | "weekly">("daily");
+  const [currentPage, setCurrentPage] = useState(1);
+  const entriesPerPage = 20;
 
   const { data: consumption } = trpc.consumption.list.useQuery(undefined, {
     enabled: !!user,
@@ -317,10 +319,12 @@ export default function History() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredConsumption
-                .sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime())
-                .slice(0, 20)
-                .map((entry) => {
+              {(() => {
+                const sorted = filteredConsumption.sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime());
+                const totalPages = Math.ceil(sorted.length / entriesPerPage);
+                const startIndex = (currentPage - 1) * entriesPerPage;
+                const paginatedEntries = sorted.slice(startIndex, startIndex + entriesPerPage);
+                return paginatedEntries.map((entry) => {
                   const product = productMap[entry.productId];
                   if (!product) return null;
                   return (
@@ -352,7 +356,37 @@ export default function History() {
                       </div>
                     </div>
                   );
-                })}
+                });
+              })()}
+              
+              {(() => {
+                const sorted = filteredConsumption.sort((a, b) => new Date(b.consumptionDate).getTime() - new Date(a.consumptionDate).getTime());
+                const totalPages = Math.ceil(sorted.length / entriesPerPage);
+                if (totalPages <= 1) return null;
+                return (
+                  <div className="flex items-center justify-between pt-4 border-t mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>

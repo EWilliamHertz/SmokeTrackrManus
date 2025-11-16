@@ -166,3 +166,14 @@
 - [x] Add Consumption Insights card to Dashboard showing total items and avg/day
 - [x] Add quick quantity buttons (0.3, 0.5, 1, 2) to consumption form
 - [x] Fix duplicate "Cigars" label (changed to "Cigarillos")
+
+## Timezone Issue (Nov 15)
+- [x] Fix consumption form showing 1 hour earlier than user's current time
+- [x] Ensure datetime-local input properly initializes with user's timezone
+- [x] Use manual date formatting instead of toISOString() to preserve local timezone
+
+## Pagination Feature (Nov 15)
+- [x] Add pagination to History page consumption entries
+- [x] Allow users to navigate through all entries (currently limited to 20)
+- [x] Add page controls (Previous/Next buttons)
+- [x] Show current page and total pages

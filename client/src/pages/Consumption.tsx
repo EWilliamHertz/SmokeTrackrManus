@@ -16,7 +16,16 @@ export default function Consumption() {
   const [, setLocation] = useLocation();
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 16));
+  const [date, setDate] = useState(() => {
+    const now = new Date();
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input (in local timezone)
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  });
 
   const { data: products } = trpc.products.list.useQuery(undefined, {
     enabled: !!user,
