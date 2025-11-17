@@ -176,7 +176,14 @@ export default function History() {
     setEditingEntry(entry);
     setEditQuantity(entry.quantity.toString());
     setEditProductId(entry.productId.toString());
-    setEditDate(new Date(entry.consumptionDate).toISOString().split('T')[0]);
+    // Format datetime-local input value (YYYY-MM-DDTHH:MM) in local timezone
+    const date = new Date(entry.consumptionDate);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    setEditDate(`${year}-${month}-${day}T${hours}:${minutes}`);
   };
 
   const handleUpdate = () => {
@@ -427,9 +434,9 @@ export default function History() {
               />
             </div>
             <div>
-              <Label>Date</Label>
+              <Label>Date & Time</Label>
               <Input
-                type="date"
+                type="datetime-local"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
               />

@@ -83,6 +83,12 @@ export default function Inventory() {
         avgPerDay = totalConsumed / daysDiff;
       }
 
+      // Calculate average price per unit from purchases
+      const totalCost = productPurchases.reduce((sum, p) => sum + parseFloat(p.totalCost), 0);
+      const avgPricePerUnit = totalPurchased > 0 ? totalCost / totalPurchased : 0;
+      const inventoryValue = Math.round(stock * avgPricePerUnit * 100) / 100;
+      const consumedValue = Math.round(totalConsumed * avgPricePerUnit * 100) / 100;
+
       return {
         ...product,
         stock,
@@ -90,6 +96,9 @@ export default function Inventory() {
         totalConsumed,
         totalGivenAway,
         avgPerDay,
+        avgPricePerUnit,
+        inventoryValue,
+        consumedValue,
       };
     });
   }, [products, purchases, consumption, giveaways]);
@@ -133,6 +142,34 @@ export default function Inventory() {
       </header>
 
       <main className="p-4 space-y-3 max-w-lg mx-auto">
+        {/* Total Value Summary */}
+        {inventoryStats && inventoryStats.length > 0 && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Total Inventory Value</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {inventoryStats.reduce((sum, p) => sum + (p.inventoryValue || 0), 0).toFixed(2)} SEK
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Current stock worth</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Total Consumed Value</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {inventoryStats.reduce((sum, p) => sum + (p.consumedValue || 0), 0).toFixed(2)} SEK
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">Total spent on consumption</div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {inventoryStats?.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -187,6 +224,14 @@ export default function Inventory() {
                           • ~{Math.ceil(product.stock / product.avgPerDay)} days remaining
                         </span>
                       )}
+                    </div>
+                  )}
+                  {product.inventoryValue > 0 && (
+                    <div className="text-xs font-semibold text-green-600 dark:text-green-400 text-center pt-2 border-t">
+                      Stock Value: {product.inventoryValue.toFixed(2)} SEK
+                      <span className="text-muted-foreground font-normal ml-2">
+                        ({product.avgPricePerUnit.toFixed(2)} SEK/unit)
+                      </span>
                     </div>
                   )}
                 </CardContent>

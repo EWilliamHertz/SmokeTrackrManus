@@ -177,3 +177,15 @@
 - [x] Allow users to navigate through all entries (currently limited to 20)
 - [x] Add page controls (Previous/Next buttons)
 - [x] Show current page and total pages
+
+## Edit Entry Timestamp Bug (Nov 15)
+- [x] Fix consumption entry edit changing timestamp when only quantity is modified
+- [x] Preserve original consumption date/time during edits
+- [x] Ensure datetime-local input shows correct original time in edit dialog
+- [x] Changed edit dialog from date-only to datetime-local input
+
+## Inventory Value Tracking (Nov 15)
+- [x] Add total value of all consumed products display
+- [x] Add total current inventory value display
+- [x] Show individual product inventory value (price per unit × stock)
+- [x] Calculate values based on purchase prices
