@@ -201,3 +201,13 @@
 - [x] Add route and navigation tab for Cost Analytics
 - [x] Add pie chart visualization for cost breakdown by type
 - [x] Display total consumed cost and total items metrics
+
+## Cost Analytics Enhancements (Nov 15)
+- [x] Add time period selector (1/3/7/10/14 days, All-Time)
+- [x] Calculate cost per day dynamically based on selected time period
+- [x] Show real-time cost metrics for each time period
+- [x] Add cost projection for upcoming month based on current rate
+- [x] Display budget warning when projected cost exceeds monthly budget
+- [x] Update all analytics (cost by type, most expensive products) to respect time filter
+- [x] Show days in period for context
+- [x] Add visual alerts (red border) when projection exceeds budget

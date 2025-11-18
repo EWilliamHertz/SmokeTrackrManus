@@ -2,12 +2,16 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import MobileNav from "@/components/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { DollarSign, TrendingUp, Package, Calendar, BarChart3, PieChart } from "lucide-react";
-import { useMemo } from "react";
+import { DollarSign, TrendingUp, Package, Calendar, BarChart3, PieChart, AlertTriangle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
+
+type TimePeriod = "1" | "3" | "7" | "10" | "14" | "all";
 
 export default function CostAnalytics() {
   const { user } = useAuth();
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("all");
   const { data: products } = trpc.products.list.useQuery(undefined, {
     enabled: !!user,
   });
@@ -15,6 +19,10 @@ export default function CostAnalytics() {
     enabled: !!user,
   });
   const { data: consumption } = trpc.consumption.list.useQuery(undefined, {
+    enabled: !!user,
+  });
+
+  const { data: settings } = trpc.settings.get.useQuery(undefined, {
     enabled: !!user,
   });
 
@@ -29,14 +37,26 @@ export default function CostAnalytics() {
         mostExpensiveProducts: [],
         monthlyCosts: [],
         avgPricePerUnit: 0,
+        projectedMonthlyCost: 0,
+        daysInPeriod: 0,
       };
     }
+
+    // Filter consumption by time period
+    const now = new Date();
+    const filteredConsumption = timePeriod === "all" ? consumption : consumption.filter(c => {
+      const date = new Date(c.consumptionDate);
+      const daysAgo = parseInt(timePeriod);
+      const cutoffDate = new Date(now);
+      cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+      return date >= cutoffDate;
+    });
 
     // Calculate total spent
     const totalSpent = purchases.reduce((sum, p) => sum + parseFloat(p.totalCost), 0);
 
     // Calculate total consumed items
-    const totalItems = consumption.reduce((sum, c) => sum + parseFloat(c.quantity as any), 0);
+    const totalItems = filteredConsumption.reduce((sum, c) => sum + parseFloat(c.quantity as any), 0);
 
     // Calculate cost per item (average cost per consumption)
     const productCostMap: Record<number, number> = {};
@@ -47,28 +67,36 @@ export default function CostAnalytics() {
       productCostMap[product.id] = totalQuantity > 0 ? totalCost / totalQuantity : 0;
     });
 
-    const totalConsumedCost = consumption.reduce((sum, c) => {
+    const totalConsumedCost = filteredConsumption.reduce((sum, c) => {
       const costPerUnit = productCostMap[c.productId] || 0;
       return sum + (costPerUnit * parseFloat(c.quantity as any));
     }, 0);
 
     const costPerItem = totalItems > 0 ? totalConsumedCost / totalItems : 0;
 
-    // Calculate cost per day
+    // Calculate cost per day and days in period
     let costPerDay = 0;
-    if (consumption.length > 0) {
-      const sortedConsumption = [...consumption].sort(
-        (a, b) => new Date(a.consumptionDate).getTime() - new Date(b.consumptionDate).getTime()
-      );
-      const firstDate = new Date(sortedConsumption[0].consumptionDate);
-      const lastDate = new Date(sortedConsumption[sortedConsumption.length - 1].consumptionDate);
-      const daysDiff = Math.max(1, Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)));
-      costPerDay = totalConsumedCost / daysDiff;
+    let daysInPeriod = 0;
+    if (filteredConsumption.length > 0) {
+      if (timePeriod === "all") {
+        const sortedConsumption = [...filteredConsumption].sort(
+          (a, b) => new Date(a.consumptionDate).getTime() - new Date(b.consumptionDate).getTime()
+        );
+        const firstDate = new Date(sortedConsumption[0].consumptionDate);
+        const lastDate = new Date(sortedConsumption[sortedConsumption.length - 1].consumptionDate);
+        daysInPeriod = Math.max(1, Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)));
+      } else {
+        daysInPeriod = parseInt(timePeriod);
+      }
+      costPerDay = totalConsumedCost / daysInPeriod;
     }
+
+    // Project monthly cost based on current rate
+    const projectedMonthlyCost = costPerDay * 30;
 
     // Cost breakdown by product type
     const costByTypeMap: Record<string, number> = {};
-    consumption.forEach(c => {
+    filteredConsumption.forEach(c => {
       const product = products.find(p => p.id === c.productId);
       if (product) {
         const type = product.type;
@@ -85,7 +113,7 @@ export default function CostAnalytics() {
 
     // Most expensive products by total consumed cost
     const productTotalCost: Record<number, { name: string; cost: number; quantity: number }> = {};
-    consumption.forEach(c => {
+    filteredConsumption.forEach(c => {
       const product = products.find(p => p.id === c.productId);
       if (product) {
         const costPerUnit = productCostMap[c.productId] || 0;
@@ -140,8 +168,10 @@ export default function CostAnalytics() {
       mostExpensiveProducts,
       monthlyCosts,
       avgPricePerUnit: Math.round(avgPricePerUnit * 100) / 100,
+      projectedMonthlyCost: Math.round(projectedMonthlyCost * 100) / 100,
+      daysInPeriod,
     };
-  }, [products, purchases, consumption]);
+  }, [products, purchases, consumption, timePeriod]);
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -152,6 +182,34 @@ export default function CostAnalytics() {
       </header>
 
       <main className="p-4 space-y-4 max-w-4xl mx-auto">
+        {/* Time Period Selector */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Time Period</h3>
+                <p className="text-sm text-muted-foreground">
+                  {timePeriod === "all" ? "All-Time" : `Last ${timePeriod} day${timePeriod === "1" ? "" : "s"}`}
+                  {analytics.daysInPeriod > 0 && ` (${analytics.daysInPeriod} days)`}
+                </p>
+              </div>
+              <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Last 1 day</SelectItem>
+                  <SelectItem value="3">Last 3 days</SelectItem>
+                  <SelectItem value="7">Last 7 days</SelectItem>
+                  <SelectItem value="10">Last 10 days</SelectItem>
+                  <SelectItem value="14">Last 14 days</SelectItem>
+                  <SelectItem value="all">All-Time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20">
@@ -206,6 +264,55 @@ export default function CostAnalytics() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Cost Projection */}
+        {analytics.projectedMonthlyCost > 0 && (
+          <Card className={`border-2 ${
+            settings?.monthlyBudget && analytics.projectedMonthlyCost > parseFloat(settings.monthlyBudget)
+              ? "bg-red-500/5 border-red-500/50"
+              : "bg-blue-500/5 border-blue-500/30"
+          }`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Monthly Cost Projection
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-3xl font-bold">{analytics.projectedMonthlyCost.toFixed(2)} SEK</div>
+                  <div className="text-sm text-muted-foreground">
+                    Based on current rate of {analytics.costPerDay.toFixed(2)} SEK/day
+                  </div>
+                </div>
+                {settings?.monthlyBudget && (
+                  <div className="pt-3 border-t">
+                    {analytics.projectedMonthlyCost > parseFloat(settings.monthlyBudget) ? (
+                      <div className="flex items-start gap-2 text-red-600 dark:text-red-400">
+                        <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="font-semibold">Over Budget Warning</div>
+                          <div className="text-sm">
+                            Projected to exceed monthly budget by{" "}
+                            {(analytics.projectedMonthlyCost - parseFloat(settings.monthlyBudget)).toFixed(2)} SEK
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-green-600 dark:text-green-400">
+                        <div className="font-semibold">Within Budget</div>
+                        <div className="text-sm">
+                          {(parseFloat(settings.monthlyBudget) - analytics.projectedMonthlyCost).toFixed(2)} SEK remaining
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Monthly Cost Trends */}
         {analytics.monthlyCosts.length > 0 && (
