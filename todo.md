@@ -189,3 +189,15 @@
 - [x] Add total current inventory value display
 - [x] Show individual product inventory value (price per unit × stock)
 - [x] Calculate values based on purchase prices
+
+## Cost Analytics Tab (Nov 15)
+- [x] Create new Cost Analytics page component
+- [x] Calculate cost per day (daily average spending)
+- [x] Calculate cost per item (average cost per consumption)
+- [x] Show cost breakdown by product type (cigars, cigarettes, cigarillos, snus)
+- [x] Display monthly cost trends with bar chart
+- [x] Rank most expensive products by total spent
+- [x] Show cost efficiency metrics (price per unit comparisons)
+- [x] Add route and navigation tab for Cost Analytics
+- [x] Add pie chart visualization for cost breakdown by type
+- [x] Display total consumed cost and total items metrics

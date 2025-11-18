@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import ProductDetail from "./pages/ProductDetail";
 import ShareView from "./pages/ShareView";
 import Giveaways from "./pages/Giveaways";
+import CostAnalytics from "./pages/CostAnalytics";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/settings"} component={Settings} />
       <Route path={"/product/:id"} component={ProductDetail} />
       <Route path={"/giveaways"} component={Giveaways} />
+      <Route path={"/cost-analytics"} component={CostAnalytics} />
       <Route path={"/share/:token"} component={ShareView} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

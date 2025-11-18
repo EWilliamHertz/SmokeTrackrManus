@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingCart, Settings as SettingsIcon, PlusCircle } from "lucide-react";
+import { Home, Package, ShoppingCart, Settings as SettingsIcon, DollarSign } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,7 @@ export default function MobileNav() {
   const navItems = [
     { path: "/", icon: Home, label: "Dashboard" },
     { path: "/inventory", icon: Package, label: "Inventory" },
+    { path: "/cost-analytics", icon: DollarSign, label: "Cost" },
     { path: "/purchases", icon: ShoppingCart, label: "Purchases" },
     { path: "/settings", icon: SettingsIcon, label: "Settings" },
   ];
