@@ -19,6 +19,7 @@ import { Calendar, TrendingUp, Pencil, Trash2, BarChart3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ConsumptionHeatmap from "@/components/ConsumptionHeatmap";
 
 type Period = "day" | "week" | "month" | "all";
 
@@ -277,6 +278,11 @@ export default function History() {
             )}
           </CardContent>
         </Card>
+
+        {/* Consumption Heatmap */}
+        {consumption && consumption.length > 0 && (
+          <ConsumptionHeatmap consumption={consumption} />
+        )}
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <Card>

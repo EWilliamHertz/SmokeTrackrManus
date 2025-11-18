@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -77,6 +77,7 @@ export const userSettings = mysqlTable("userSettings", {
   dashboardLayout: text("dashboardLayout"), // JSON string for dashboard section order
   shareToken: varchar("shareToken", { length: 64 }).unique(), // For public read-only sharing
   sharePreferences: text("sharePreferences"), // JSON string for share visibility settings
+  weeklyReportsEnabled: boolean("weeklyReportsEnabled").notNull().default(false), // Enable/disable weekly email reports
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

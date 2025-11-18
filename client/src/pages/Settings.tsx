@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Download, Upload, Share2, Copy, RefreshCw, Gift } from "lucide-react";
+import { Download, Upload, Share2, Copy, RefreshCw, Gift, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export default function Settings() {
   });
   
   const [monthlyBudget, setMonthlyBudget] = useState("");
+  const [weeklyReportsEnabled, setWeeklyReportsEnabled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [shareUrl, setShareUrl] = useState("");
   const [sharePrefs, setSharePrefs] = useState({
@@ -85,6 +86,13 @@ export default function Settings() {
     updateSettings.mutate({
       monthlyBudget: parseFloat(monthlyBudget),
       currency: "SEK",
+    });
+  };
+
+  const handleWeeklyReportsToggle = (checked: boolean) => {
+    setWeeklyReportsEnabled(checked);
+    updateSettings.mutate({
+      weeklyReportsEnabled: checked,
     });
   };
 
@@ -300,6 +308,33 @@ export default function Settings() {
                 {updateSettings.isPending ? "Saving..." : "Save Budget"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Weekly Email Reports
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Receive automated weekly summaries every Monday with your cost trends, budget status, and top consumed products.
+            </p>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="weekly-reports"
+                checked={settings?.weeklyReportsEnabled || weeklyReportsEnabled}
+                onCheckedChange={handleWeeklyReportsToggle}
+              />
+              <label
+                htmlFor="weekly-reports"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                Enable weekly email reports
+              </label>
+            </div>
           </CardContent>
         </Card>
 

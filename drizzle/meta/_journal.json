@@ -36,6 +36,13 @@
       "when": 1763206917949,
       "tag": "0004_crazy_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1763477874923,
+      "tag": "0005_careful_purple_man",
+      "breakpoints": true
     }
   ]
 }

@@ -211,3 +211,25 @@
 - [x] Update all analytics (cost by type, most expensive products) to respect time filter
 - [x] Show days in period for context
 - [x] Add visual alerts (red border) when projection exceeds budget
+
+## Consumption Heatmap (Nov 15)
+- [x] Create calendar heatmap component showing daily consumption
+- [x] Color-code cells based on consumption intensity (green to red gradient)
+- [x] Add tooltip showing exact consumption count on hover
+- [x] Display current month by default with month navigation
+- [x] Add to History page as new visualization option
+- [x] Add legend showing intensity scale
+
+## Comparative Analytics (Nov 15)
+- [x] Calculate period-over-period percentage changes for key metrics
+- [x] Add visual indicators (up/down arrows) with color coding
+- [x] Display comparison badges on Cost Analytics cards
+- [x] Show trend direction (green for decrease, red for increase in spending)
+- [x] Only show comparisons when time period filter is active (not "All-Time")
+
+## Weekly Email Reports (Nov 15)
+- [x] Add weeklyReportsEnabled field to database schema
+- [x] Add user preference toggle in Settings page
+- [x] Update settings router to support weekly reports toggle
+- [ ] Create backend scheduled job for email generation (requires external scheduler)
+- [ ] Implement email template with cost trends and budget status

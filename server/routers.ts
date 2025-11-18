@@ -305,20 +305,27 @@ export const appRouter = router({
   settings: router({
     get: protectedProcedure.query(async ({ ctx }) => {
       const settings = await db.getUserSettings(ctx.user.id);
-      return settings || { monthlyBudget: "500.00", currency: "SEK", shareToken: null };
+      return settings || { monthlyBudget: "500.00", currency: "SEK", shareToken: null, weeklyReportsEnabled: false };
     }),
     
     update: protectedProcedure
       .input(z.object({
-        monthlyBudget: z.number().positive(),
-        currency: z.string().default("SEK"),
+        monthlyBudget: z.number().positive().optional(),
+        currency: z.string().optional(),
+        weeklyReportsEnabled: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        await db.upsertUserSettings({
-          userId: ctx.user.id,
-          monthlyBudget: input.monthlyBudget.toString(),
-          currency: input.currency,
-        });
+        const updateData: any = { userId: ctx.user.id };
+        if (input.monthlyBudget !== undefined) {
+          updateData.monthlyBudget = input.monthlyBudget.toString();
+        }
+        if (input.currency !== undefined) {
+          updateData.currency = input.currency;
+        }
+        if (input.weeklyReportsEnabled !== undefined) {
+          updateData.weeklyReportsEnabled = input.weeklyReportsEnabled;
+        }
+        await db.upsertUserSettings(updateData);
         return { success: true };
       }),
     

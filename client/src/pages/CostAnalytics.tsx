@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import MobileNav from "@/components/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { DollarSign, TrendingUp, Package, Calendar, BarChart3, PieChart, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, Package, Calendar, BarChart3, PieChart, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
@@ -94,6 +94,48 @@ export default function CostAnalytics() {
     // Project monthly cost based on current rate
     const projectedMonthlyCost = costPerDay * 30;
 
+    // Calculate previous period data for comparison
+    const getPreviousPeriodData = () => {
+      const prevCutoffDate = new Date(now);
+      let prevConsumption;
+      
+      if (timePeriod === "all") {
+        return { prevCostPerDay: 0, prevTotalItems: 0, prevTotalCost: 0 };
+      }
+      
+      const days = parseInt(timePeriod);
+      prevCutoffDate.setDate(prevCutoffDate.getDate() - (days * 2));
+      const currentCutoffDate = new Date(now);
+      currentCutoffDate.setDate(currentCutoffDate.getDate() - days);
+      
+      prevConsumption = consumption.filter(c => {
+        const date = new Date(c.consumptionDate);
+        return date >= prevCutoffDate && date < currentCutoffDate;
+      });
+      
+      const prevTotalItems = prevConsumption.reduce((sum, c) => sum + parseFloat(c.quantity as any), 0);
+      const prevTotalCost = prevConsumption.reduce((sum, c) => {
+        const costPerUnit = productCostMap[c.productId] || 0;
+        return sum + (costPerUnit * parseFloat(c.quantity as any));
+      }, 0);
+      const prevCostPerDay = prevTotalCost / days;
+      
+      return { prevCostPerDay, prevTotalItems, prevTotalCost };
+    };
+    
+    const { prevCostPerDay, prevTotalItems, prevTotalCost } = getPreviousPeriodData();
+    
+    // Calculate percentage changes
+    const costPerDayChange = prevCostPerDay > 0 
+      ? ((costPerDay - prevCostPerDay) / prevCostPerDay) * 100 
+      : 0;
+    const totalItemsChange = prevTotalItems > 0 
+      ? ((totalItems - prevTotalItems) / prevTotalItems) * 100 
+      : 0;
+    const totalCostChange = prevTotalCost > 0 
+      ? ((totalConsumedCost - prevTotalCost) / prevTotalCost) * 100 
+      : 0;
+
     // Cost breakdown by product type
     const costByTypeMap: Record<string, number> = {};
     filteredConsumption.forEach(c => {
@@ -170,6 +212,9 @@ export default function CostAnalytics() {
       avgPricePerUnit: Math.round(avgPricePerUnit * 100) / 100,
       projectedMonthlyCost: Math.round(projectedMonthlyCost * 100) / 100,
       daysInPeriod,
+      costPerDayChange: Math.round(costPerDayChange * 10) / 10,
+      totalItemsChange: Math.round(totalItemsChange * 10) / 10,
+      totalCostChange: Math.round(totalCostChange * 10) / 10,
     };
   }, [products, purchases, consumption, timePeriod]);
 
@@ -221,7 +266,17 @@ export default function CostAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.totalConsumedCost?.toFixed(2) || '0.00'}</div>
-              <div className="text-xs text-muted-foreground">SEK</div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">SEK</div>
+                {timePeriod !== "all" && analytics.totalCostChange && analytics.totalCostChange !== 0 && (
+                  <div className={`flex items-center gap-0.5 text-xs font-medium ${
+                    analytics.totalCostChange < 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                  }`}>
+                    {analytics.totalCostChange < 0 ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
+                    {Math.abs(analytics.totalCostChange).toFixed(1)}%
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -234,7 +289,17 @@ export default function CostAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.costPerDay.toFixed(2)}</div>
-              <div className="text-xs text-muted-foreground">SEK/day</div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">SEK/day</div>
+                {timePeriod !== "all" && analytics.costPerDayChange && analytics.costPerDayChange !== 0 && (
+                  <div className={`flex items-center gap-0.5 text-xs font-medium ${
+                    analytics.costPerDayChange < 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                  }`}>
+                    {analytics.costPerDayChange < 0 ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
+                    {Math.abs(analytics.costPerDayChange).toFixed(1)}%
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
